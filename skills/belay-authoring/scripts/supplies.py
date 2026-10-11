@@ -24,7 +24,10 @@ toolkit obeys:
 
   * the runner's validator runs against the edited bundle, and a run that is
     not clean is discarded - the bundle is never left broken and reported as
-    done;
+    done. One exception, because this tool's job includes removing a finding:
+    a bundle that was ALREADY invalid is repaired when the edit removes at
+    least one finding and adds none. The edit is written, and the report says
+    how many findings remain and that the bundle is still invalid;
   * --check does the whole operation on a staging copy, validates it, prints
     what it would do, and throws the copy away;
   * a dirty git working tree under the bundle refuses the run unless --force,
@@ -34,7 +37,8 @@ toolkit obeys:
 filename slug an author has in front of them), not a path.
 
 Exit codes:
-    0  done (list: the index was printed; add: written, or --check validated it)
+    0  done (list: the index was printed; add: written, or --check validated it;
+       a repair that leaves the bundle invalid is also 0 - read the report)
     2  usage, I/O, a refused run, or a validator failure
 """
 
@@ -186,16 +190,41 @@ def _print_plan(entry: dict, lesson: bl.Lesson | None) -> None:
     print(f"     describe {entry['describe']}")
 
 
-def _report_validator(run: bl.ValidatorRun, check_only: bool) -> None:
+def _report_validator(
+    run: bl.ValidatorRun, check_only: bool, repair: bl.Repair | None = None
+) -> None:
     print()
     print(f"validator: {run.validator}  ({run.how})")
-    print(f"           {run.summary()}")
+    if repair is None:
+        print(f"           {run.summary()}")
+        print()
+        if check_only:
+            print("--check: nothing was written. The plan above validates.")
+        else:
+            print("written. `git diff` now shows exactly this change.")
+        return
+    # A repair of an invalid bundle. Say plainly that it is still invalid; the
+    # word PASS must not appear, because nothing here passed.
+    removed, left = len(repair.removed), len(repair.remaining)
+    print(f"           STILL INVALID - {left} finding(s) remain")
+    print()
     if check_only:
-        print()
-        print("--check: nothing was written. The plan above validates.")
+        print(
+            f"--check: nothing was written. This edit would remove {removed} "
+            f"finding(s); {left} would remain, and the bundle would still be invalid."
+        )
     else:
+        print(
+            f"written. This edit removed {removed} finding(s); {left} remain, and "
+            f"the bundle is still invalid."
+        )
+    print("remaining findings:")
+    print("\n".join(f"    {line}" for line in repair.remaining[:25]))
+    if left > 25:
+        print(f"    ... and {left - 25} more")
+    if not check_only:
         print()
-        print("written. `git diff` now shows exactly this change.")
+        print("`git diff` now shows exactly this change.")
 
 
 def add(args: argparse.Namespace) -> int:
@@ -245,7 +274,7 @@ def add(args: argparse.Namespace) -> int:
 
     _print_plan(entry, lesson)
 
-    with bl.Staged(root, check_only=args.check) as stage:
+    with bl.Staged(root, check_only=args.check, allow_repair=True) as stage:
         if lesson is not None:
             target_path = stage.root / lesson.rel
             target_text = bl.read_text(target_path)
@@ -259,8 +288,9 @@ def add(args: argparse.Namespace) -> int:
             new_text = bl.add_supplies(manifest_text, entry, frontmatter=False)
             manifest_path.write_text(new_text, encoding="utf-8")
         run = stage.commit()
+        repair = stage.repair
 
-    _report_validator(run, args.check)
+    _report_validator(run, args.check, repair)
     return 0
 
 

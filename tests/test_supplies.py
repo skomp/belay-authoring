@@ -37,7 +37,7 @@ import sys
 from pathlib import Path
 
 import harness as h
-from harness import Workspace, case, check, check_in, report
+from harness import Workspace, case, check, check_in, check_not_in, report
 
 sys.path.insert(0, str(h.SCRIPTS))
 import bundlelib as bl  # noqa: E402  (harness put the scripts dir on sys.path)
@@ -880,6 +880,296 @@ def cli_case_list() -> None:
 
 
 # --------------------------------------------------------------------------
+# Repair: an edit that removes the finding the bundle is invalid because of
+# (belay-authoring#28)
+#
+# Every case asserts the outcome on disk AND the validator's own verdict on
+# the result, not only the message text.
+# --------------------------------------------------------------------------
+
+
+def undeclared_bundle(ws: Workspace, names: tuple[str, ...], body_extra: str = "") -> Path:
+    """rust-automaton-db with `names` as material in 00-foundations, none declared.
+
+    Each name is a check 6 finding: the file is in a lesson folder and no
+    LESSON.md line or supplies entry names it. `body_extra` is appended to the
+    LESSON.md body (used to plant a finding that carries a line number).
+    """
+    bundle = ws.copy("rust-automaton-db")
+    folder_from = None
+    for index, name in enumerate(names):
+        made = folder_a_lesson(bundle, "00-foundations", name) if index == 0 else None
+        folder_from = folder_from or made
+        (bundle / "lessons" / "00-foundations" / name).write_text("sample\n", encoding="utf-8")
+    lesson = bundle / "lessons" / "00-foundations" / "LESSON.md"
+    text = lesson.read_text(encoding="utf-8")
+    # folder_a_lesson names its first material file in the body so the
+    # fixture is valid before the entry exists. Here the opposite is wanted:
+    # the file must be UNNAMED, so the finding exists.
+    text = text.replace(f"`{names[0]}`", "the sample")
+    lesson.write_text(text + body_extra, encoding="utf-8")
+    h.git_init(bundle)
+    return bundle
+
+
+def verdict(bundle: Path) -> tuple[int, list[str]]:
+    """The real validator's exit code and its findings (not warnings)."""
+    run = bl.run_validator(bundle)
+    entries, _ = run.failures()
+    return run.returncode, entries
+
+
+def lesson_add(bundle: Path, name: str, *extra: str, env: dict | None = None) -> h.Run:
+    return add_cmd(
+        bundle, "--from", f"lessons/00-foundations/{name}", "--to", name,
+        "--describe", f"the {name} file", "--lesson", "00-foundations", *extra,
+        env=env,
+    )
+
+
+def cli_case_repair_one_undeclared() -> None:
+    with Workspace() as ws:
+        bundle = undeclared_bundle(ws, ("a.txt",))
+        code, found = verdict(bundle)
+        check(code == 1 and len(found) == 1 and "[check  6]" in found[0],
+              "repair/one: the fixture really fails on one check 6 finding")
+        result = lesson_add(bundle, "a.txt")
+        check(result.returncode == 0, "repair/one: add exits 0")
+        check_in("PASS", result.output, "repair/one: a fully repaired bundle says PASS")
+        code, found = verdict(bundle)
+        check(code == 0 and not found, "repair/one: the bundle validates clean afterwards")
+        text = (bundle / "lessons" / "00-foundations" / "LESSON.md").read_text(encoding="utf-8")
+        check("from: lessons/00-foundations/a.txt" in text, "repair/one: the entry is on disk")
+
+
+def cli_case_repair_two_undeclared() -> None:
+    with Workspace() as ws:
+        bundle = undeclared_bundle(ws, ("a.txt", "b.txt"))
+        first = lesson_add(bundle, "a.txt")
+        check(first.returncode == 0, "repair/two: the first add exits 0")
+        check_in("still invalid", first.output, "repair/two: the first add says the bundle is still invalid")
+        check_in("removed 1 finding(s); 1 remain", first.output, "repair/two: says what it removed and what remains")
+        check_in("b.txt", first.output, "repair/two: lists the remaining finding")
+        check_not_pass(first.output, "repair/two: the first add never prints PASS")
+        text = (bundle / "lessons" / "00-foundations" / "LESSON.md").read_text(encoding="utf-8")
+        check("from: lessons/00-foundations/a.txt" in text, "repair/two: the first entry is on disk")
+        code, found = verdict(bundle)
+        check(code == 1 and len(found) == 1 and "b.txt" in found[0],
+              "repair/two: the validator agrees: one finding, for b.txt")
+
+        commit_all(bundle)
+        second = lesson_add(bundle, "b.txt")
+        check(second.returncode == 0, "repair/two: the second add exits 0")
+        code, found = verdict(bundle)
+        check(code == 0 and not found, "repair/two: the bundle is clean after the second add")
+
+
+def check_not_pass(output: str, description: str) -> None:
+    lines = [ln for ln in output.splitlines() if "PASS" in ln]
+    check(not lines, description)
+
+
+def cli_case_repair_survives_a_line_shift() -> None:
+    """A check 5 finding is located file:line; the frontmatter insert moves it."""
+    with Workspace() as ws:
+        bundle = undeclared_bundle(ws, ("a.txt",), body_extra="\nStatus: done\n")
+        code, found = verdict(bundle)
+        five = [f for f in found if f.startswith("[check  5]")]
+        check(code == 1 and len(five) == 1, "repair/shift: the fixture has a check 5 finding")
+        before_line = five[0].split(":")[1].split()[0] if five else None
+        result = lesson_add(bundle, "a.txt")
+        check(result.returncode == 0, "repair/shift: a repair is accepted although the check 5 line moved")
+        code, found = verdict(bundle)
+        five_after = [f for f in found if f.startswith("[check  5]")]
+        check(len(found) == 1 and len(five_after) == 1,
+              "repair/shift: exactly the unrelated check 5 finding remains")
+        after_line = five_after[0].split(":")[1].split()[0] if five_after else None
+        check(before_line != after_line,
+              f"repair/shift: the line number really did move ({before_line} -> {after_line})")
+
+
+def cli_case_repair_unrelated_edit_refused() -> None:
+    with Workspace() as ws:
+        bundle = undeclared_bundle(ws, ("b.txt",))
+        (bundle / "supplies").mkdir()
+        (bundle / "supplies" / "w.txt").write_text("w\n", encoding="utf-8")
+        commit_all(bundle)
+        before = h.tree_digest(bundle)
+        result = add_cmd(
+            bundle, "--from", "supplies/w.txt", "--to", "w.txt", "--describe", "unrelated"
+        )
+        check(result.returncode != 0, "repair/unrelated: exits non-zero")
+        check_in("removed no finding", result.output, "repair/unrelated: says the edit removed no finding")
+        check(h.tree_digest(bundle) == before, "repair/unrelated: the bundle is byte-identical")
+        # POSITIVE CONTROL: the same unrelated edit is accepted on a valid bundle.
+        valid = ws.copy("rust-automaton-db", "valid")
+        (valid / "supplies").mkdir()
+        (valid / "supplies" / "w.txt").write_text("w\n", encoding="utf-8")
+        h.git_init(valid)
+        ok = add_cmd(valid, "--from", "supplies/w.txt", "--to", "w.txt", "--describe", "unrelated")
+        check(ok.returncode == 0, "repair/unrelated control: accepted on a valid bundle")
+
+
+def cli_case_repair_adding_a_finding_refused() -> None:
+    """Removes the check 6 finding, adds a check 22 one (`Tutorial/` is not refused by the tool)."""
+    with Workspace() as ws:
+        bundle = undeclared_bundle(ws, ("a.txt", "b.txt"))
+        before = h.tree_digest(bundle)
+        result = add_cmd(
+            bundle, "--from", "lessons/00-foundations/a.txt", "--to", "Tutorial/a.txt",
+            "--describe", "bad target", "--lesson", "00-foundations",
+        )
+        check(result.returncode != 0, "repair/adds: exits non-zero")
+        check_in("ADD 1 finding(s)", result.output, "repair/adds: says it adds a finding")
+        check_in("[check 22]", result.output, "repair/adds: names the added finding")
+        check_in("begins with 'tutorial/'", result.output, "repair/adds: gives the added finding's text")
+        check_in("already had 2 finding(s)", result.output, "repair/adds: says how many were there before")
+        check_not_in("b.txt", result.output, "repair/adds: does not list the pre-existing findings")
+        check(h.tree_digest(bundle) == before, "repair/adds: the bundle is byte-identical")
+
+
+def cli_case_valid_bundle_made_invalid_refused_as_before() -> None:
+    with Workspace() as ws:
+        bundle = ws.copy("rust-automaton-db")
+        folder_a_lesson(bundle, "00-foundations", "a.txt")
+        h.git_init(bundle)
+        before = h.tree_digest(bundle)
+        result = add_cmd(
+            bundle, "--from", "lessons/00-foundations/a.txt", "--to", "Tutorial/a.txt",
+            "--describe", "bad target", "--lesson", "00-foundations",
+        )
+        check(result.returncode != 0, "repair/valid: exits non-zero")
+        check_in("would leave the bundle invalid", result.output, "repair/valid: the refusal text is the original")
+        check_in("fix the existing findings first", result.output, "repair/valid: the original hint is kept")
+        check_not_in("ADD", result.output, "repair/valid: none of the repair wording")
+        check(h.tree_digest(bundle) == before, "repair/valid: the bundle is byte-identical")
+
+
+def cli_case_repair_check_mode() -> None:
+    with Workspace() as ws:
+        bundle = undeclared_bundle(ws, ("a.txt", "b.txt"))
+        before = h.tree_digest(bundle)
+        result = lesson_add(bundle, "a.txt", "--check")
+        check(result.returncode == 0, "repair/--check: exit 0")
+        check_in("nothing was written", result.output, "repair/--check: says nothing was written")
+        check_in("would remove 1 finding(s); 1 would remain", result.output,
+                 "repair/--check: reports the same verdict the real run gives")
+        check_in("still be invalid", result.output, "repair/--check: says the bundle would still be invalid")
+        check_not_pass(result.output, "repair/--check: never prints PASS")
+        check(h.tree_digest(bundle) == before, "repair/--check: the bundle is byte-identical")
+        real = lesson_add(bundle, "a.txt")
+        check_in("removed 1 finding(s); 1 remain", real.output, "repair/--check control: the real run gives that verdict")
+
+
+STUB_BY_STATE = """#!/usr/bin/env python3
+import sys
+from pathlib import Path
+root = Path(sys.argv[-1])
+text = (root / "lessons" / "00-foundations" / "LESSON.md").read_text()
+edited = "supplies:" in text
+code = int(Path(__file__).with_name("after" if edited else "before").read_text())
+print("Belay validator - mode: bundle")
+if code == 1:
+    print("FAIL - 2 finding(s):" if not edited else "FAIL - 1 finding(s):")
+    print("  [check  6] lessons/00-foundations/LESSON.md -> b.txt: x")
+    if not edited:
+        print("  [check  6] lessons/00-foundations/LESSON.md -> a.txt: x")
+sys.exit(code)
+"""
+
+
+def cli_case_repair_indeterminate_is_refused() -> None:
+    """Never accept on a run that did not complete: the stub exits 3 or 2."""
+    for before_code, after_code, label in ((1, 3, "after exits 3"), (3, 1, "before exits 3"), (1, 2, "after exits 2")):
+        with Workspace() as ws:
+            bundle = undeclared_bundle(ws, ("a.txt",))
+            stub = ws.root / "stub_validate_bundle.py"
+            stub.write_text(STUB_BY_STATE, encoding="utf-8")
+            (ws.root / "before").write_text(str(before_code))
+            (ws.root / "after").write_text(str(after_code))
+            before = h.tree_digest(bundle)
+            result = lesson_add(bundle, "a.txt", env={"BELAY_VALIDATOR": str(stub)})
+            check(result.returncode != 0, f"repair/indeterminate ({label}): refused")
+            check_in("did not complete", result.output, f"repair/indeterminate ({label}): says the run did not complete")
+            check(h.tree_digest(bundle) == before, f"repair/indeterminate ({label}): byte-identical")
+    # POSITIVE CONTROL: the same stub with both runs exit 1 accepts the repair
+    # (a=gone, b=still there), so the refusals above are the exit codes' doing.
+    with Workspace() as ws:
+        bundle = undeclared_bundle(ws, ("a.txt",))
+        stub = ws.root / "stub_validate_bundle.py"
+        stub.write_text(STUB_BY_STATE, encoding="utf-8")
+        (ws.root / "before").write_text("1")
+        (ws.root / "after").write_text("1")
+        result = lesson_add(bundle, "a.txt", env={"BELAY_VALIDATOR": str(stub)})
+        check(result.returncode == 0, "repair/indeterminate control: both runs exit 1 -> accepted")
+
+
+def test_failures_excludes_warnings_and_joins_continuations() -> None:
+    out = (
+        "Belay validator - mode: bundle\n\n"
+        "FAIL - 2 finding(s):\n"
+        "  [check  3] a.md: first\n"
+        "  [check  6] b.md: second\n"
+        "    continued\n"
+        "\n"
+        "1 warning(s) - these do not make the bundle invalid:\n"
+        "  [check 28] tutorial.yaml: unknown field\n"
+    )
+    run = bl.ValidatorRun(Path("v"), "t", 1, out, "")
+    entries, complete = run.failures()
+    check(complete and len(entries) == 2, "failures: two findings, header count reproduced")
+    check(entries[1].endswith("second\ncontinued"), "failures: a continuation line joins its finding")
+    check(len(run.findings) == 3, "failures: control - `findings` DOES count the warning (why failures exists)")
+    short = bl.ValidatorRun(Path("v"), "t", 1, out.replace("FAIL - 2", "FAIL - 3"), "")
+    check(short.failures()[1] is False, "failures: a header count it cannot reproduce is incomplete")
+    check(bl.ValidatorRun(Path("v"), "t", 1, "garbage", "").failures() == ([], False),
+          "failures: no header is incomplete")
+
+
+def test_finding_key_normalises_only_line_numbers() -> None:
+    a = "[check  5] lessons/x.md:112: a Status: label appears here: 'Status: done'. why"
+    b = "[check  5] lessons/x.md:116: a Status: label appears here: 'Status: done'. why"
+    check(bl.finding_key(a) == bl.finding_key(b), "finding_key: a moved check 5 line compares equal")
+    other = b.replace("'Status: done'", "'Status: open'")
+    check(bl.finding_key(a) != bl.finding_key(other), "finding_key: a different marker still differs")
+    elsewhere = b.replace("lessons/x.md", "lessons/y.md")
+    check(bl.finding_key(a) != bl.finding_key(elsewhere), "finding_key: the same marker in another file differs")
+    six = "[check  6] lessons/x/LESSON.md -> a.txt: the material file 'a.txt' is never named"
+    check(bl.finding_key(six) == six, "finding_key: any other finding is compared exactly")
+    p1 = "[check  3] lessons/x.md: the frontmatter does not parse: lessons/x.md frontmatter: line 4: bad"
+    p2 = p1.replace("line 4", "line 8")
+    check(bl.finding_key(p1) == bl.finding_key(p2), "finding_key: a moved parse-error line compares equal")
+
+
+def test_staged_default_is_unchanged() -> None:
+    """Without allow_repair, an edit that removes a finding is still refused."""
+    with Workspace() as ws:
+        bundle = undeclared_bundle(ws, ("a.txt", "b.txt"))
+        before = h.tree_digest(bundle)
+        refused = None
+        try:
+            with bl.Staged(bundle) as stage:
+                lesson = stage.root / "lessons" / "00-foundations" / "LESSON.md"
+                lesson.write_text(
+                    lesson.read_text(encoding="utf-8") + "\nSee a.txt.\n", encoding="utf-8"
+                )
+                stage.commit()
+        except bl.ToolError as exc:
+            refused = str(exc)
+        check(refused is not None and "would leave the bundle invalid" in refused,
+              "Staged default: a partial repair is refused with the original text")
+        check(refused is not None and "fix the existing findings first" in refused,
+              "Staged default: the original 'already invalid' hint is kept")
+        check(h.tree_digest(bundle) == before, "Staged default: byte-identical")
+        # CONTROL: the same edit with the mode on is accepted.
+        with bl.Staged(bundle, allow_repair=True) as stage:
+            lesson = stage.root / "lessons" / "00-foundations" / "LESSON.md"
+            lesson.write_text(lesson.read_text(encoding="utf-8") + "\nSee a.txt.\n", encoding="utf-8")
+            stage.commit()
+        check(h.tree_digest(bundle) != before, "Staged default control: allow_repair=True writes the same edit")
+
+
+# --------------------------------------------------------------------------
 
 
 def main() -> int:
@@ -942,6 +1232,32 @@ def main() -> int:
         cli_case_check()
     with case("list names every declared entry, its scope and its timing"):
         cli_case_list()
+
+    print()
+    print("repair: an edit that removes the finding the bundle is invalid because of")
+    print()
+    with case("failures() reads findings only, not warnings"):
+        test_failures_excludes_warnings_and_joins_continuations()
+    with case("finding_key normalises line numbers and nothing else"):
+        test_finding_key_normalises_only_line_numbers()
+    with case("Staged without allow_repair is unchanged"):
+        test_staged_default_is_unchanged()
+    with case("repair: one undeclared file, add leaves the bundle clean"):
+        cli_case_repair_one_undeclared()
+    with case("repair: two undeclared files, worked down one at a time"):
+        cli_case_repair_two_undeclared()
+    with case("repair: an unrelated finding whose line number moves does not block it"):
+        cli_case_repair_survives_a_line_shift()
+    with case("repair: an unrelated edit to an invalid bundle is refused"):
+        cli_case_repair_unrelated_edit_refused()
+    with case("repair: an edit that removes one finding and adds another is refused"):
+        cli_case_repair_adding_a_finding_refused()
+    with case("repair: an edit that makes a valid bundle invalid is refused as before"):
+        cli_case_valid_bundle_made_invalid_refused_as_before()
+    with case("repair: --check reports the verdict and writes nothing"):
+        cli_case_repair_check_mode()
+    with case("repair: a validator run that did not complete is never accepted"):
+        cli_case_repair_indeterminate_is_refused()
 
     return report("test_supplies.py")
 

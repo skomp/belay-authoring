@@ -514,6 +514,26 @@ def find_runner_reference(name: str, env: dict[str, str] | None = None) -> tuple
 
 
 _FINDING_RE = re.compile(r"^\s*\[check\s+(\d+)\]\s*(.*)$")
+_FAIL_HEADER_RE = re.compile(r"^FAIL - (\d+) finding\(s\):\s*$")
+
+# Two finding shapes carry a line number, and an edit that inserts lines
+# moves it. Measured against the runner's validator: a check 5 finding is
+# located `<file>:<line>`, and the frontmatter insert that `supplies.py add
+# --lesson` makes moved one from :112 to :116. A check 3 or 12 parse error
+# says `line <n>:` in its message. Those two shapes - and only those - are
+# normalised before findings are compared. Every other finding is compared
+# exactly, so text this does not know about shifts toward "removed + added",
+# which refuses a repair: the safe direction.
+_CHECK5_LINE_RE = re.compile(r"^(\[check\s+5\]\s+[^\n]*?):\d+(: )")
+_PARSE_LINE_RE = re.compile(
+    r"^(\[check\s+(?:3|12)\]\s+[^\n]*?the frontmatter does not parse: [^\n]*?)\bline \d+:"
+)
+
+
+def finding_key(entry: str) -> str:
+    """A finding with the line numbers an unrelated insert would move removed."""
+    entry = _CHECK5_LINE_RE.sub(r"\1:N\2", entry, count=1)
+    return _PARSE_LINE_RE.sub(r"\1line N:", entry, count=1)
 
 
 @dataclass
@@ -536,6 +556,45 @@ class ValidatorRun:
             if match:
                 out.append(line.strip())
         return out
+
+    def failures(self) -> tuple[list[str], bool]:
+        """The FINDINGS only, as (entries, complete).
+
+        `findings` above matches every `[check N]` line, and the validator
+        prints a WARNING in the same shape (`  [check 28] ...`, under a
+        "N warning(s)" header). Measured: a PASS run with one warning yields
+        one "finding" from `findings`. The repair comparison in Staged must
+        tell a finding from a warning, so it reads this instead. It takes the
+        lines under the `FAIL - N finding(s):` header and stops at the first
+        line that is not indented. A continuation line (indented, not
+        `[check N]`) joins the entry before it, so a finding whose message
+        carries a newline is one entry, not two.
+
+        `complete` is False when the entries parsed do not number the N the
+        header declared, or the header is missing. The caller must then treat
+        the run as unreadable: a count it cannot reproduce must not be
+        compared.
+        """
+        lines = self.stdout.splitlines()
+        declared = None
+        start = 0
+        for index, line in enumerate(lines):
+            match = _FAIL_HEADER_RE.match(line)
+            if match:
+                declared = int(match.group(1))
+                start = index + 1
+                break
+        if declared is None:
+            return [], False
+        entries: list[str] = []
+        for line in lines[start:]:
+            if not line.startswith(" "):
+                break
+            if _FINDING_RE.match(line):
+                entries.append(line.strip())
+            elif line.strip() and entries:
+                entries[-1] += "\n" + line.strip()
+        return entries, len(entries) == declared
 
     def summary(self) -> str:
         if self.returncode == 0:
@@ -631,6 +690,35 @@ def require_clean_tree(target: Path, force: bool, out=sys.stdout) -> None:
 # --------------------------------------------------------------------------
 
 
+def _take(entries: list[str], surplus) -> list[str]:
+    """The entries (raw text) whose normalised key is in the multiset `surplus`."""
+    left = dict(surplus)
+    out = []
+    for entry in entries:
+        key = finding_key(entry)
+        if left.get(key, 0) > 0:
+            left[key] -= 1
+            out.append(entry)
+    return out
+
+
+@dataclass
+class Repair:
+    """What an accepted repair did: the findings it removed and those left."""
+
+    removed: list[str]
+    remaining: list[str]
+    before: int
+
+
+def _cap(lines: list[str]) -> str:
+    """At most 25 findings, indented for a message. The refusal's cap."""
+    shown = "\n".join(f"    {line}" for line in lines[:25])
+    if len(lines) > 25:
+        shown += f"\n    ... and {len(lines) - 25} more"
+    return shown
+
+
 class Staged:
     """Mutate a copy; swap it in only after the validator passes.
 
@@ -648,12 +736,29 @@ class Staged:
     The swap is two renames inside one temporary directory on the same
     filesystem. The window between them is the only moment the bundle path
     does not exist, and a failure there is rolled back explicitly.
+
+    `allow_repair=True` is opt-in and only supplies.py add uses it. A bundle
+    that is invalid BECAUSE of the finding an edit removes cannot otherwise be
+    corrected by that edit. With the mode on, a baseline run is taken on the
+    staged copy before the caller edits, and commit() also accepts an edit
+    that removes at least one finding and adds none (findings compared as
+    multisets). Everything else is refused, and a refusal writes nothing.
     """
 
-    def __init__(self, bundle: Path, *, check_only: bool = False, mode: str = "bundle"):
+    def __init__(
+        self,
+        bundle: Path,
+        *,
+        check_only: bool = False,
+        mode: str = "bundle",
+        allow_repair: bool = False,
+    ):
         self.bundle = Path(bundle).resolve()
         self.check_only = check_only
         self.mode = mode
+        self.allow_repair = allow_repair
+        self.baseline: ValidatorRun | None = None
+        self.repair: Repair | None = None
         self.tmpbase: Path | None = None
         self.root: Path | None = None
         self.committed = False
@@ -668,6 +773,11 @@ class Staged:
         self.tmpbase = Path(tempfile.mkdtemp(dir=str(parent), prefix=".belay-stage-"))
         self.root = self.tmpbase / self.bundle.name
         shutil.copytree(self.bundle, self.root, symlinks=True)
+        if self.allow_repair:
+            # On the staged copy, not on self.bundle: the baseline and the
+            # after-edit run then see the same root path, so no finding that
+            # quotes the path can differ between them for that reason.
+            self.baseline = run_validator(self.root, mode=self.mode)
         return self
 
     def __exit__(self, exc_type, exc, tb) -> bool:
@@ -685,11 +795,66 @@ class Staged:
         self.validator_run = run_validator(self.root, mode=self.mode)
         return self.validator_run
 
+    def _judge_repair(self, base: ValidatorRun, run: ValidatorRun) -> Repair:
+        """Accept (return) or refuse (raise) an edit to an already-invalid bundle."""
+        from collections import Counter
+
+        nothing = f"Nothing was written; {self.bundle} is unchanged."
+        for label, one in (("before", base), ("after", run)):
+            if one.returncode != 1:
+                raise ToolError(
+                    f"the validator did not complete {label} this edit "
+                    f"({one.summary()}), so it cannot say whether the edit "
+                    f"repairs the bundle. {nothing}\n\n"
+                    f"Run it yourself: python3 {one.validator} {self.bundle}"
+                )
+        before, before_ok = base.failures()
+        after, after_ok = run.failures()
+        if not (before_ok and after_ok):
+            raise ToolError(
+                f"the validator's findings could not be read back reliably "
+                f"({'before' if not before_ok else 'after'} this edit), so "
+                f"they cannot be compared. {nothing}\n\n"
+                f"Run it yourself: python3 {run.validator} {self.bundle}"
+            )
+        # Multisets of normalised findings. Display strings stay the raw ones.
+        have = Counter(finding_key(f) for f in before)
+        now = Counter(finding_key(f) for f in after)
+        gone, new = have - now, now - have
+        added = _take(after, new)
+        removed = _take(before, gone)
+        if added:
+            raise ToolError(
+                f"this edit would ADD {len(added)} finding(s) to a bundle that was "
+                f"already invalid, so it was refused. {nothing}\n"
+                f"The finding(s) this edit adds - yours to fix now:\n"
+                f"{_cap(added)}\n"
+                f"The bundle already had {len(before)} finding(s) before this edit"
+                f"{f', and this edit removes {len(removed)} of them' if removed else ''}"
+                f"; those are not listed here."
+            )
+        if not removed:
+            raise ToolError(
+                f"the bundle was already invalid ({len(before)} finding(s)) and this "
+                f"edit removed no finding, so it was refused. {nothing}\n"
+                f"{_cap(after)}\n\n"
+                f"Fix the existing findings first: "
+                f"python3 {run.validator} {self.bundle}"
+            )
+        return Repair(removed=removed, remaining=after, before=len(before))
+
     def commit(self) -> ValidatorRun:
         """Validate the staged copy, then swap it in. Raises on any failure."""
         assert self.root is not None and self.tmpbase is not None
         run = self.validate()
-        if not run.clean:
+        if (
+            self.allow_repair
+            and self.baseline is not None
+            and not run.clean
+            and not self.baseline.clean
+        ):
+            self.repair = self._judge_repair(self.baseline, run)
+        elif not run.clean:
             detail = "\n".join(f"    {line}" for line in run.findings[:25])
             extra = "\n" + detail if detail else ""
             raise ToolError(

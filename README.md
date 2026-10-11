@@ -157,6 +157,9 @@ slug drift apart and how a `lessons` list stops matching the files beside it.
 Every operation that changes a bundle:
 
 - runs the validator afterwards and **fails loudly if it left the bundle invalid**
+  - one exception: `supplies.py add` also accepts an edit to a bundle that was **already
+    invalid**, when the edit removes at least one finding and adds none. It says how many
+    findings remain and that the bundle is still invalid (exit 0 means "written", not "valid")
 - supports `--check`, showing what it would do without doing it
 - refuses on a dirty working tree unless forced, so `git diff` is a clean record
 - leaves the bundle **unchanged** on failure, never half-edited
