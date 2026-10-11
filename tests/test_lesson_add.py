@@ -35,6 +35,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from harness import (  # noqa: E402
     FIXTURES,
+    INDEX,
     LESSON,
     Run,
     Workspace,
@@ -1798,6 +1799,174 @@ def case_optional_check() -> None:
 
 
 # --------------------------------------------------------------------------
+# F. The title is written so that BOTH readers give back the same string
+#
+# belay-authoring#26: TEMPLATE wrote `title: {title}` with the raw text, so a
+# title holding ": " made frontmatter that yamlite refuses and PyYAML refuses,
+# while the runner's lenient validator reported PASS. These cases read the
+# written file back and compare the VALUE; "it looks quoted" proves nothing.
+# --------------------------------------------------------------------------
+
+try:
+    import yaml as pyyaml  # a conforming parser, only to test against
+except ImportError:  # pragma: no cover - depends on the machine
+    pyyaml = None
+
+TITLES = [
+    "Events to state: joining the two halves",
+    "Trailing colon:",
+    "- leading dash",
+    "has a # hash",
+    'she said "copy it"',
+    'back\\slash and "quote"',
+    "true",
+    "0.74",
+    "[bracketed] title",
+    "it's fine",
+    # Found by measurement, not named in the issue: bare `emit_scalar` leaves
+    # these unquoted and PyYAML (YAML 1.1) retypes them.
+    "Yes",
+    "On",
+    "0x1f",
+    "2026-09-12",
+    "1:30",
+    ".inf",
+    "tab\there",
+]
+
+# What the tool must refuse rather than write: characters a conforming parser
+# reads as a line break or rejects as non-printable, even inside quotes.
+REFUSED_TITLES = ["bell\x07 here", "line" + chr(0x2028) + "separator", "next" + chr(0x85) + "line"]
+
+
+def pyyaml_title(path: Path):
+    """The title as PyYAML reads the frontmatter, or an Exception instance."""
+    raw, _body = bl.split_frontmatter(path.read_text(encoding="utf-8"))
+    try:
+        return pyyaml.safe_load(raw).get("title")
+    except Exception as exc:  # noqa: BLE001 - the exception IS the finding
+        return exc
+
+
+def title_in_both_readers(label: str, path: Path, title: str) -> None:
+    got = frontmatter(path).get("title")
+    check(got == title, f"{label}: yamlite reads the title back as {title!r}, not {got!r}")
+    if pyyaml is None:
+        return
+    got = pyyaml_title(path)
+    check(got == title, f"{label}: PyYAML reads the title back as {title!r}, not {got!r}")
+
+
+def title_raw_line(path: Path) -> str:
+    return next(
+        line for line in path.read_text(encoding="utf-8").splitlines()
+        if line.startswith("title:")
+    )
+
+
+def case_title_round_trip() -> None:
+    if pyyaml is None:
+        note("PyYAML is not importable: the PyYAML half of every title check was SKIPPED")
+    for title in TITLES:
+        for optional in (False, True):
+            label = f"title {title!r} {'optional' if optional else 'main path'}"
+            with Workspace() as ws:
+                bundle = ws.copy("rust-automaton-db", "b")
+                if optional:
+                    result = add(
+                        bundle, "--id", "title-probe", "--title", title, "--optional",
+                        "--offer-at", OFFER_AT, "--offer-because", BECAUSE,
+                    )
+                    path = bundle / "lessons" / "title-probe.md"
+                else:
+                    result = add(bundle, "--id", "title-probe", "--title", title)
+                    path = bundle / "lessons" / f"{len(ORIGINAL):02d}-title-probe.md"
+                check(result.returncode == 0, f"{label}: exit 0 ({result.output[-300:]})")
+                if not path.is_file():
+                    check(False, f"{label}: the lesson file {path.name} was written")
+                    continue
+                title_in_both_readers(label, path, title)
+                if title in ("Events to state: joining the two halves", "she said \"copy it\""):
+                    index_shows_title(label, bundle, path, title)
+
+
+def index_shows_title(label: str, bundle: Path, path: Path, title: str) -> None:
+    """index.py prints a lesson's Purpose line and falls back to its title only
+    when there is none, so a fresh lesson never shows its title. Cut the body
+    away to make the title the thing index.py has to print (belay-authoring#20
+    was a quoted title that index.py dropped)."""
+    text = path.read_text(encoding="utf-8")
+    raw, _body = bl.split_frontmatter(text)
+    path.write_text("---\n" + raw.strip("\n") + "\n---\n", encoding="utf-8")
+    shown = run(INDEX, bundle).output
+    check_in("title-probe", shown, f"{label}: index.py lists the new lesson")
+    check_in(
+        f"·  {title}",
+        shown,
+        f"{label}: index.py prints the exact title {title!r}",
+    )
+
+
+def case_title_plain_control() -> None:
+    """POSITIVE CONTROL: an ordinary title stays unquoted, so the cases above
+    cannot pass by quoting everything."""
+    with Workspace() as ws:
+        bundle = ws.copy("rust-automaton-db", "b")
+        result = add(bundle, "--id", "plain-probe", "--title", "Parse the header")
+        check(result.returncode == 0, f"plain: exit 0 ({result.output[-300:]})")
+        path = bundle / "lessons" / f"{len(ORIGINAL):02d}-plain-probe.md"
+        check(
+            title_raw_line(path) == "title: Parse the header",
+            f"plain: the title line is written unquoted, not {title_raw_line(path)!r}",
+        )
+        title_in_both_readers("plain", path, "Parse the header")
+
+
+def case_title_refused() -> None:
+    for title in REFUSED_TITLES:
+        with Workspace() as ws:
+            bundle = ws.copy("rust-automaton-db", "b")
+            refusal(
+                f"main path title {title!r}", bundle,
+                ("--id", "title-probe", "--title", title), "--title",
+            )
+            refusal(
+                f"optional title {title!r}", bundle,
+                ("--id", "title-probe", "--title", title, "--optional",
+                 "--offer-at", OFFER_AT, "--offer-because", BECAUSE),
+                "--title",
+            )
+    # POSITIVE CONTROL: the same command with an ordinary title succeeds.
+    with Workspace() as ws:
+        bundle = ws.copy("rust-automaton-db", "b")
+        check(
+            add(bundle, "--id", "title-probe", "--title", "Fine").returncode == 0,
+            "refused titles: the same command with an ordinary title succeeds",
+        )
+
+
+def case_offer_because_round_trips() -> None:
+    """--offer-because is free text and goes through emit_scalar. Measured for
+    belay-authoring#26: it already round-trips by value, so this pins that and
+    no code changed."""
+    for because in ("Stuck here: try this", "Trailing colon:", "- dash", "has a # hash",
+                    'say "hi"', "true", "0.74", "[x] y", "it's"):
+        with Workspace() as ws:
+            bundle = ws.copy("rust-automaton-db", "b")
+            result = optional_add(bundle, "--offer-at", OFFER_AT, "--offer-because", because)
+            check(result.returncode == 0, f"because {because!r}: exit 0 ({result.output[-200:]})")
+            entry = manifest_optional(bundle).get("lessons/borrow-detour.md", {})
+            check(
+                entry.get("offer_because") == because,
+                f"because {because!r}: yamlite reads {entry.get('offer_because')!r}",
+            )
+            if pyyaml is not None:
+                text = (bundle / "tutorial.yaml").read_text(encoding="utf-8")
+                got = pyyaml.safe_load(text)["optional_lessons"]["lessons/borrow-detour.md"]["offer_because"]
+                check(got == because, f"because {because!r}: PyYAML reads {got!r}")
+
+
+# --------------------------------------------------------------------------
 
 
 def main() -> int:
@@ -1871,6 +2040,16 @@ def main() -> int:
         case_optional_validator_failure_discards()
     with case("E25 --optional --check prints the plan and changes nothing"):
         case_optional_check()
+
+    with case("F26 a title is written so both YAML readers give it back"):
+        case_title_round_trip()
+    with case("F27 an ordinary title is still written unquoted"):
+        case_title_plain_control()
+    with case("F28 a title no parser can hold is refused, nothing written"):
+        case_title_refused()
+
+    with case("F29 --offer-because round-trips free text by value"):
+        case_offer_because_round_trips()
 
     return report("lesson.py add")
 
