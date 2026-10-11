@@ -413,6 +413,50 @@ def cli_case_from_missing() -> None:
         check(h.tree_digest(bundle) != before, "and the digest oracle can tell")
 
 
+def cli_case_describe_round_trips() -> None:
+    """--describe is free text and goes through emit_scalar. Measured for
+    belay-authoring#26: it already round-trips by value, in yamlite and in
+    PyYAML, so this case pins that and no code changed. Without PyYAML the
+    second half is reported as skipped, not passed."""
+    try:
+        import yaml as pyyaml
+    except ImportError:
+        pyyaml = None
+        h.note("PyYAML is not importable: the PyYAML half of the --describe check was SKIPPED")
+    for value in ("Needs: a manifest", "Trailing colon:", "- dash", "has a # hash",
+                  'say "hi"', "true", "0.74", "[x] y", "it's"):
+        with Workspace() as ws:
+            bundle = ws.copy("rust-automaton-db")
+            (bundle / "supplies").mkdir()
+            (bundle / "supplies" / "a.txt").write_text("a\n", encoding="utf-8")
+            h.git_init(bundle)
+            out = add_cmd(bundle, "--from", "supplies/a.txt", "--to", "safe/a.txt",
+                          "--describe", value)
+            check(out.returncode == 0, f"describe {value!r}: exit 0 ({out.output[-200:]})")
+            text = (bundle / "tutorial.yaml").read_text(encoding="utf-8")
+            got = load_yaml(text, "m")["supplies"][-1]["describe"]
+            check(got == value, f"describe {value!r}: yamlite reads {got!r}")
+            if pyyaml is not None:
+                got = pyyaml.safe_load(text)["supplies"][-1]["describe"]
+                check(got == value, f"describe {value!r}: PyYAML reads {got!r}")
+
+
+def cli_case_describe_unwritable() -> None:
+    """A --describe emit_scalar cannot write is refused cleanly: non-zero,
+    names the value, tree byte-identical. (belay#57: yamlite cannot read it.)"""
+    with Workspace() as ws:
+        bundle = ws.copy("rust-automaton-db")
+        (bundle / "supplies").mkdir()
+        (bundle / "supplies" / "a.txt").write_text("a\n", encoding="utf-8")
+        h.git_init(bundle)
+        before = h.tree_digest(bundle)
+        out = add_cmd(bundle, "--from", "supplies/a.txt", "--to", "safe/a.txt",
+                      "--describe", 'say "hi # there')
+        check(out.returncode != 0, "an unwritable --describe exits non-zero")
+        check_in("cannot be written", out.output, "and says why")
+        check(h.tree_digest(bundle) == before, "and the bundle is byte-identical")
+
+
 def cli_case_to_escapes() -> None:
     with Workspace() as ws:
         bundle = ws.copy("rust-automaton-db")
@@ -874,6 +918,10 @@ def main() -> int:
 
     with case("add refuses a --from that is not in the bundle"):
         cli_case_from_missing()
+    with case("add --describe round-trips free text by value"):
+        cli_case_describe_round_trips()
+    with case("add refuses a --describe it cannot write, and writes nothing"):
+        cli_case_describe_unwritable()
     with case("add refuses a --to that escapes the workspace"):
         cli_case_to_escapes()
     with case("add refuses a --to that begins with tutorial/"):

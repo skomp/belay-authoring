@@ -34,6 +34,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Iterable
@@ -925,11 +926,13 @@ def set_frontmatter_field(text: str, key: str, value: str) -> tuple[str, bool]:
 # at most THREE characters over ONE 27-character alphabet - it is not every
 # value, and 'all 20454 round-trip' must not be read as 'everything does'.
 # Longer values, and characters outside that alphabet, were never emitted.
-# Known survivors, all longer than three characters and so outside the
-# measured population: js-yaml still retypes `0x1f`, `.inf`, `.nan` and a date
-# such as `2026-09-12`, each of which yamlite keeps as text. The previous
-# emitter fails those four in the same way, so they are a standing limit of
-# this guard rather than a defect it introduced.
+# That bounded measurement predates belay-authoring#26, which found the
+# survivors it missed: values a YAML 1.1 resolver retypes (`0x1f`, `.inf`,
+# `Yes`, `1:30`, `2026-09-12`), ' #' inside a plain value, and an opening
+# indicator character. The gate below now refuses all of them, so they are
+# quoted. One residual limit remains, and emit_scalar refuses it instead of
+# writing it: yamlite cannot read back a value holding an odd number of double
+# quotes before ' #' (reader defect, belay#57).
 #
 # Quoting is always safe, so the guard errs towards quoting: it never has to
 # decide that an unusual value is FINE, only that a value is plainly plain.
@@ -944,64 +947,152 @@ _BLOCK_INDICATORS = ("-", "?", ":")
 _FLOW_INDICATORS = ",{}[]"
 
 
+# Plain scalars a YAML 1.1 resolver (PyYAML) reads as something other than a
+# string. DERIVED, not remembered: these are the patterns of
+# `yaml.resolver.Resolver.yaml_implicit_resolvers` in PyYAML 6.0.2, copied
+# verbatim for the bool, null, int, float, timestamp, merge and value tags
+# (every tag the resolver carries except `yaml`, whose `!`, `&`, `*` are
+# covered by _PLAIN_OPENERS below). tests/test_emit_scalar.py compares each
+# pattern string here with the installed PyYAML's own and fails if they drift.
+# yamlite keeps all of these as text, so the loader probe cannot see them.
+_YAML11_RETYPED = tuple(
+    re.compile(pattern, re.X)
+    for pattern in (
+        r"""^(?:yes|Yes|YES|no|No|NO
+                |true|True|TRUE|false|False|FALSE
+                |on|On|ON|off|Off|OFF)$""",
+        r"""^(?: ~
+                |null|Null|NULL
+                | )$""",
+        r"""^(?:[-+]?0b[0-1_]+
+                |[-+]?0[0-7_]+
+                |[-+]?(?:0|[1-9][0-9_]*)
+                |[-+]?0x[0-9a-fA-F_]+
+                |[-+]?[1-9][0-9_]*(?::[0-5]?[0-9])+)$""",
+        r"""^(?:[-+]?(?:[0-9][0-9_]*)\.[0-9_]*(?:[eE][-+][0-9]+)?
+                |\.[0-9][0-9_]*(?:[eE][-+][0-9]+)?
+                |[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+\.[0-9_]*
+                |[-+]?\.(?:inf|Inf|INF)
+                |\.(?:nan|NaN|NAN))$""",
+        r"""^(?:[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]
+                |[0-9][0-9][0-9][0-9]
+                 -[0-9][0-9]?
+                 -[0-9][0-9]?
+                 (?:[Tt]|[ \t]+)[0-9][0-9]?
+                 :[0-9][0-9]
+                 :[0-9][0-9] (?:\.[0-9]*)?
+                 (?:[ \t]*(?:Z|[-+][0-9][0-9]?(?::[0-9][0-9])?))?)$""",
+        r"^(?:<<)$",
+        r"^(?:=)$",
+    )
+)
+# A plain scalar opening with one of these is a tag, anchor, alias, block
+# scalar header, quote, directive, comment or reserved indicator. PyYAML
+# rejects or reinterprets every one (checked on this machine, 6.0.2).
+_PLAIN_OPENERS = "#&*!|>'\"%@`"
+
+
 def plain_scalar_is_portable(value: str) -> bool:
     """True when `value` may be written as an UNQUOTED YAML scalar and read
     back by a conforming parser, not only by this project's lenient one.
 
     False is the safe answer: the caller quotes, and a quoted scalar is
     valid everywhere. See the note above for the measurements behind each
-    clause.
+    clause. This gate only ever causes MORE quoting.
     """
     if ": " in value:
         return False
     if value.endswith(":"):
         return False
+    # A comment starts at ' #'. yamlite's comment stripping can be fooled by
+    # an apostrophe (`N'? # 1` reads whole there and as `N'?` in PyYAML), so
+    # the loader probe cannot be trusted with this one.
+    if " #" in value:
+        return False
     if "\t" in value:
         return False
-    if value[:1] in tuple(_FLOW_INDICATORS):
+    if value[:1] in tuple(_FLOW_INDICATORS) or value[:1] in _PLAIN_OPENERS:
         return False
     for indicator in _BLOCK_INDICATORS:
         if value == indicator or value.startswith(indicator + " "):
             return False
+    for retyped in _YAML11_RETYPED:
+        if retyped.match(value):
+            return False
     return True
+
+
+def _refuse_unwritable_characters(value: str) -> None:
+    """A control character other than tab, newline and carriage return, or a
+    Unicode line or paragraph separator, is a line break or non-printable to a
+    conforming parser even inside quotes (PyYAML raises), so no form is safe.
+    Refusing is the contract; a damaged file is not.
+    """
+    for ch in value:
+        if ch in "\t\n\r":
+            continue
+        if unicodedata.category(ch) in ("Cc", "Zl", "Zp"):
+            raise ToolError(
+                f"the value {value!r} contains the character U+{ord(ch):04X}, "
+                f"which cannot be written on one line of YAML in a form a "
+                f"conforming parser reads back. Remove it. Nothing was written."
+            )
 
 
 def emit_scalar(value: str) -> str:
     """A single-line YAML scalar that yamlite reads back as `value`.
 
     Two gates stand between a value and the plain (unquoted) form, and it
-    has to pass both. `plain_scalar_is_portable` refuses any value carrying
-    a block-structure indicator a conforming parser reads as syntax - ': '
-    anywhere, a trailing ':', a leading '- ' or '? '. `load_yaml` then
-    parses the unquoted rendering back and the plain form is kept only if
-    the result is the exact string `value` again. Any other outcome - a
-    different value, a different type (int/float/bool/ None), or a parse
-    error - falls back to a double-quoted scalar, with
-    backslashes, double quotes and the whitespace that would otherwise break
-    single-line-ness (`\\n`, `\\r`, `\\t`) escaped. Every other character is
-    copied through unescaped; yamlite's quoted-scalar reader only treats a
-    backslash and the closing quote specially, so nothing else needs it.
+    has to pass both. `plain_scalar_is_portable` refuses any value a
+    conforming parser reads as syntax or retypes - ': ' anywhere, a trailing
+    ':', ' #', a leading '- ' or an indicator character, a YAML 1.1
+    bool/null/number/date. `load_yaml` then parses the unquoted rendering
+    back and the plain form is kept only if the result is the exact string
+    `value` again. Any other outcome falls back to a double-quoted scalar,
+    with backslashes, double quotes and the whitespace that would otherwise
+    break single-line-ness (`\\n`, `\\r`, `\\t`) escaped.
+
+    POST-CONDITION. Whatever form is returned, `value: <form>` parsed with
+    yamlite gives back exactly `value` as a str. If the quoted fallback does
+    not (yamlite strips a comment before it honours an escaped quote, so
+    `say "hi # there` fails to read; belay#57), a ToolError is raised: the toolkit
+    must not write a file it cannot read back. A control or line-separator
+    character is refused the same way.
     """
-    if plain_scalar_is_portable(value):
-        probe = f"value: {value}\n"
-        try:
-            parsed = load_yaml(probe, "emit_scalar probe")
-        except YamlError:
-            parsed = None
-        if (
-            isinstance(parsed, dict)
-            and isinstance(parsed.get("value"), str)
-            and parsed["value"] == value
-        ):
-            return value
-    escaped = (
+    _refuse_unwritable_characters(value)
+    quoted = '"' + (
         value.replace("\\", "\\\\")
         .replace('"', '\\"')
         .replace("\n", "\\n")
         .replace("\r", "\\r")
         .replace("\t", "\\t")
+    ) + '"'
+
+    def reads_back(form: str) -> bool:
+        try:
+            parsed = load_yaml(f"value: {form}\n", "emit_scalar probe")
+        except YamlError:
+            return False
+        return (
+            isinstance(parsed, dict)
+            and isinstance(parsed.get("value"), str)
+            and parsed["value"] == value
+        )
+
+    if plain_scalar_is_portable(value) and reads_back(value):
+        return value
+    if reads_back(quoted):
+        return quoted
+    cause = (
+        " A double quote together with ' #' can make the toolkit's YAML "
+        "reader end the string early."
+        if '"' in value and " #" in value
+        else ""
     )
-    return '"' + escaped + '"'
+    raise ToolError(
+        f"the value {value!r} cannot be written in a form this toolkit can "
+        f"read back.{cause} Nothing was written."
+    )
 
 
 _SUPPLIES_ITEM_KEYS = ("from", "to", "describe")

@@ -218,6 +218,12 @@ def add(args: argparse.Namespace) -> int:
     root = Path(args.bundle)
     bundle = bl.load_bundle(root)
     bl.require_clean_tree(root, args.force)
+    # Refuse a title that cannot be written BEFORE the plan is printed or
+    # anything is staged. The same emit_scalar call fills the template later.
+    try:
+        bl.emit_scalar(args.title)
+    except bl.ToolError as exc:
+        raise bl.ToolError(f"--title: {exc}") from None
 
     given = args.id.strip()
     prefix, body = bl.split_number_prefix(given)
@@ -344,7 +350,7 @@ def add_optional(
     with bl.Staged(root, check_only=args.check) as stage:
         target = stage.root / rel
         target.parent.mkdir(parents=True, exist_ok=True)
-        text = TEMPLATE.format(slug=slug, title=args.title)
+        text = TEMPLATE.format(slug=slug, title=bl.emit_scalar(args.title))
         # Write 1 and 2 are one file write. Check 20 requires the frontmatter
         # and the optional_lessons list to agree, so they are never apart.
         text, changed = bl.set_frontmatter_field(text, "optional", "true")
@@ -426,7 +432,8 @@ def add_main_path(
         target = stage.root / rel
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(
-            TEMPLATE.format(slug=slug, title=args.title), encoding="utf-8"
+            TEMPLATE.format(slug=slug, title=bl.emit_scalar(args.title)),
+            encoding="utf-8",
         )
         manifest_path = stage.root / "tutorial.yaml"
         manifest_text = bl.read_text(manifest_path)
