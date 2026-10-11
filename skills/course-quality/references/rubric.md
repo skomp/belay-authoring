@@ -115,7 +115,7 @@ other four bundles names setup, toolchain or project layout.
 
 ##### The table is dated, and two of its bundles have already moved
 
-Within hours of the ruling, `skomp/tutorail-bundles` acted on it. Commit `a67de21` gave
+Within hours of the ruling, `skomp/belay-bundles` acted on it. Commit `a67de21` gave
 `portable-fixed-window-rate-limiter`'s setup step to the tutor and declared
 `ownership_policy: on-request`; commit `c80d8e3` did the same for `portable-bytebeat-wav`.
 
@@ -416,7 +416,7 @@ directions: it admits `T` for a type parameter the language supplies, and it mis
 whose parameters are spelled `limit` and `window`.
 
 A future `DESIGN.md` convention that marks a conceptual parameter apart from a type would
-make the sort mechanical. That is a **bundle-format question, owned by `skomp/tutorAIl`**,
+make the sort mechanical. That is a **bundle-format question, owned by `skomp/belay`**,
 and it is not settled here. Until it is, the sort is the reader's and the report says so.
 
 #### The case that produced this row, and was then repaired
@@ -425,14 +425,14 @@ and it is not settled here. Until it is, the sort is the reader's and the report
 throws in variables N and W and doesn't explain them". `DESIGN.md:6` was the only binding of
 either symbol, three lessons used `N`, and no lesson used `W` at all.
 
-**That bundle is repaired.** `tutorail-bundles` commit `a67de21` defines both symbols in the
+**That bundle is repaired.** `belay-bundles` commit `a67de21` defines both symbols in the
 `## Theory` of `lessons/00-contract-and-language.md:31-36`, lists them under
 `## Concepts to teach` at `:44`, and tells the tutor to define them before either symbol
 appears in a task, an example or a test. `DESIGN.md:6` is unchanged and is still the
 contract; it is no longer the only place the meaning lives.
 
 Cite it as the case that produced this row, never as a current finding.
-`tutorail-authoring#14` still carries the pre-repair evidence in its body, because an issue
+`belay-authoring#14` still carries the pre-repair evidence in its body, because an issue
 records the state at filing and this one was filed before the repair. **Re-read the lessons;
 do not re-quote the issue.**
 
@@ -444,8 +444,8 @@ call to action in this step." Asked afterwards, they named one defect: **the tur
 with one plain imperative sentence.**
 
 The row is not asking the tutor for something new. The runner's own turn loop already
-requires it: step 6 of the per-turn sequence in the tutorAIl runner's
-`skills/tutorail/SKILL.md` is "give exactly one actionable task". **This row asks whether
+requires it: step 6 of the per-turn sequence in the Belay runner's
+`skills/belay/SKILL.md` is "give exactly one actionable task". **This row asks whether
 the lesson file makes that possible.** A lesson that hands the tutor a bundle of
 deliverables and an open design question has left the runner's rule unsatisfiable from the
 material, and the learner is the one who finds out.
@@ -468,7 +468,7 @@ them, from the lesson above, and both still standing after that bundle's other r
   question took the place of the action. The section never says that it does not close a
   turn.
 
-`tutorail-authoring#13` quotes those two sites as `:53` and `:70-73`. The sentences are the
+`belay-authoring#13` quotes those two sites as `:53` and `:70-73`. The sentences are the
 same; the file grew above them and the lines moved. **Take line numbers from the lesson, not
 from the issue.**
 
@@ -479,8 +479,8 @@ Marked as a decision, and settled before the closing action, the same lesson pas
 
 ### Both of these rows are questions, and stay questions
 
-Both were filed with the scored-or-asked choice left open, in `tutorail-authoring#13` and
-`tutorail-authoring#14`. **The author ruled on 2026-09-13 that both are reader-answered**,
+Both were filed with the scored-or-asked choice left open, in `belay-authoring#13` and
+`belay-authoring#14`. **The author ruled on 2026-09-13 that both are reader-answered**,
 and that is recorded here so the next auditor does not re-open it.
 
 The reason is the one the must-cover row above already gives: a scored row buys

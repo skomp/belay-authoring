@@ -1,8 +1,8 @@
 # Course quality audit: `portable-bytebeat-wav`
 
-Audited 2026-09-15 against `tutorail-authoring:course-quality` and its rubric.
+Audited 2026-09-15 against `belay-authoring:course-quality` and its rubric.
 
-Every finding below is a **proposal**. Applying any of them is the `tutorail-authoring`
+Every finding below is a **proposal**. Applying any of them is the `belay-authoring`
 skill's job, after the author says yes. Nothing in this report rejects the bundle, and
 `validate_bundle.py` is unchanged.
 
@@ -16,13 +16,13 @@ bundles audited on this date:
 ```
 Audit provenance, 2026-09-15 — identical for all five bundles
 
-bundles     skomp/tutorail-bundles @ 221c164 (== origin/main, tree clean)
-rubric      skomp/tutorail-authoring @ 86c2bc7, plugin 0.4.0
+bundles     skomp/belay-bundles @ 221c164 (== origin/main, tree clean)
+rubric      skomp/belay-authoring @ 86c2bc7, plugin 0.4.0
             skills/course-quality/references/rubric.md
 validator   pinned copy of the WHOLE scripts directory from the source checkout
-            skomp/tutorAIl @ 717c575  ->  /private/tmp/claude-501/-Users-robert-src-github-com-skomp-tutorail-authoring/19f2342f-a334-4dd6-9b45-348b60a85a2d/scratchpad/pin/validate_bundle.py
+            skomp/belay @ 717c575  ->  /private/tmp/claude-501/-Users-robert-src-github-com-skomp-belay-authoring/19f2342f-a334-4dd6-9b45-348b60a85a2d/scratchpad/pin/validate_bundle.py
             (10 validate_bundle.py copies exist on this machine; this is the source one)
-yaml reader restricted built-in, ALWAYS — tutorAIl#29 decided at 7419722,
+yaml reader restricted built-in, ALWAYS — belay#29 decided at 7419722,
             "Parse YAML with the restricted reader always, never PyYAML".
             PyYAML 6.0.3 is importable here and is deliberately not used.
 verdicts    all five bundles: PASS - every applicable check ran and found nothing. exit 0
@@ -41,7 +41,7 @@ The validator's own output says so at length. Every judgement below comes from t
 
 ### Read-only confirmation
 
-`git status --porcelain` in `/Users/robert/src/github.com/skomp/tutorail-bundles` was
+`git status --porcelain` in `/Users/robert/src/github.com/skomp/belay-bundles` was
 **empty at the start of this audit and empty at the end**. Nothing in that repository was
 created, edited, staged, committed or stashed. The only file this audit wrote is the one
 you are reading.
@@ -465,7 +465,7 @@ replaced by two. The +4 is two independent +2s:
 
 ### Deltas that are not scores
 
-- **`tutorail-bundles#5` is fixed** — the baseline's proposal 1, its self-described highest
+- **`belay-bundles#5` is fixed** — the baseline's proposal 1, its self-described highest
   value finding. Verified in section 6.5, not assumed.
 - **The baseline's proposal 5 is fixed** — the stereo lesson's prerequisite now names lesson
   03. Same commit.
@@ -890,13 +890,13 @@ task, make the authored stereo offer from the manifest" — an open offer placed
 moment the lesson's first concrete action should be. That was a second condition-2 concern in
 the same lesson, and the fix removed it. Lesson 03 still fails this row, on `:54` alone.
 
-### 6.5 The completability invariant, and `tutorail-bundles#5`
+### 6.5 The completability invariant, and `belay-bundles#5`
 
 > **Can a learner who declines every offer still finish this course?**
 
 **Yes — and, new since 2026-09-13, so can a learner who accepts.**
 
-**`tutorail-bundles#5` is genuinely fixed. Verified from the files, not from the commit
+**`belay-bundles#5` is genuinely fixed. Verified from the files, not from the commit
 message.** The 2026-09-13 report's proposal 1 recorded the defect: the stereo offer was made
 *before* lesson 03's first required task, the stereo lesson converts the writer to two
 channels, and lesson 03 requires `output.wav` to be mono — so a learner who accepted the offer
@@ -1000,7 +1000,7 @@ it scored 8 on 2026-09-13 only because one element was charged −2, and that el
 ### 6.8 Dynamic evidence
 
 No dry-run harness was run against this bundle for this audit, so there is no stall to cite in
-either direction. Nothing in this report rests on dynamic evidence. The `tutorail-bundles#5`
+either direction. Nothing in this report rests on dynamic evidence. The `belay-bundles#5`
 finding it inherits was found by reading, not by a harness, and it is verified above by
 reading.
 

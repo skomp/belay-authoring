@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-12
 **Status:** Approved design, pending implementation plan
-**Repository:** `skomp/tutorail-authoring`
+**Repository:** `skomp/belay-authoring`
 
 ---
 
@@ -28,12 +28,12 @@ arc reviewable before any lesson exists.
 
 | Repository | Holds | This project |
 |---|---|---|
-| `tutorAIl` | the runner plugin, the bundle format contract, `validate_bundle.py` | **depends on it** |
-| `tutorail-bundles` | the bundles, and their course specs | **writes into it** |
-| `tutorail-authoring` | this: the authoring skill and its toolkit | — |
+| `belay` | the runner plugin, the bundle format contract, `validate_bundle.py` | **depends on it** |
+| `belay-bundles` | the bundles, and their course specs | **writes into it** |
+| `belay-authoring` | this: the authoring skill and its toolkit | — |
 
 **The dependency on the runner is real and stated.** `validate_bundle.py` stays in
-`tutorAIl` and this project invokes it. It is not duplicated here.
+`belay` and this project invokes it. It is not duplicated here.
 
 That decision was reconsidered and confirmed. The validator looks like authoring-only
 tooling, and the first instinct was to move it here — but the runner has a legitimate use
@@ -70,7 +70,7 @@ bundle files generated. This mirrors brainstorming exactly, for the same reason:
 one document beats revising twenty lesson files.
 
 **Location: `specs/<bundle-id>.md` in the repository that holds the bundle** — for the
-current work, `tutorail-bundles`. With the course, not with the tooling, and **outside** the
+current work, `belay-bundles`. With the course, not with the tooling, and **outside** the
 bundle directory so it is not shipped to learners who have no use for the author's design
 rationale.
 
@@ -153,7 +153,7 @@ main path only, which is all this design covered. Both commands have since gaine
 `--optional` mode that writes an `optional_lessons` entry instead, adds nothing to the
 `lessons` list and never renumbers. See
 `docs/superpowers/specs/2026-09-12-optional-lessons-in-the-toolkit.md`, and
-`skills/tutorail-authoring/SKILL.md` for the calling contract.
+`skills/belay-authoring/SKILL.md` for the calling contract.
 
 `catalog.py` earns its place immediately: the multi-catalogue work expects a bundles
 repository to ship a `catalog.yaml` listing its bundles by relative path, and maintaining
@@ -203,7 +203,7 @@ not match an id being renamed is reported and left alone.
 
 There is a case for the validator learning to check that prerequisite ids resolve, which
 would make this class of breakage catchable rather than merely handled. That is a change to
-`tutorAIl`, recorded here as a candidate rather than assumed.
+`belay`, recorded here as a candidate rather than assumed.
 
 ---
 
@@ -244,7 +244,7 @@ Not a bundle registry, a publishing pipeline, or a marketplace.
 
 1. **Format migration** (`bundle_format` 1 → 2) is out of scope until a version 2 exists.
    The toolkit should not grow a migration framework speculatively.
-2. **Whether the validator gains a prerequisite-id check** (§9). A change to `tutorAIl`.
+2. **Whether the validator gains a prerequisite-id check** (§9). A change to `belay`.
 3. ~~**Whether `scaffold` is a script at all.**~~ **Settled 2026-09-12: no.** The skill
    writes the four root files and the empty `lessons/` directory itself, because that
    content is judgement, and `lesson.py add` creates every lesson, because that is

@@ -47,7 +47,7 @@ THE DISCIPLINE THAT MATTERS MOST HERE: this script never rules on anything.
     "checked and clean", and its `warnings` name any evidence channel that
     was blind.
   * `unsupplied_setup` answers THREE conditions about the first lesson and
-    reports a finding only when all three hold (tutorail-authoring#11, item
+    reports a finding only when all three hold (belay-authoring#11, item
     3): the lesson contains a project-creation step, no `supplies` entry is
     in scope for it, and no hand-over to the tutor is declared - in the
     lesson text AND in `ownership_policy`, which is guard 2 of the rubric
@@ -62,7 +62,7 @@ THE DISCIPLINE THAT MATTERS MOST HERE: this script never rules on anything.
     list items OR from a fenced block (one topic per non-empty line) - the
     corpus uses both, and reading only the first form made this script state
     that rust-automaton-db's author "never filled it in" over a fence
-    holding 45 topics (tutorail-authoring#10). It carries the SAME `status`
+    holding 45 topics (belay-authoring#10). It carries the SAME `status`
     and `warnings` pair as `symbol_evidence`, for the same reason: an empty
     `topics` must never be mistaken for a course that declared none. THREE
     results are distinct - `null` (no heading at all), a `nothing-to-check`
@@ -85,13 +85,13 @@ import sys
 from pathlib import Path
 
 # audit.py lives in a DIFFERENT skill directory from bundlelib.py, which
-# belongs to tutorail-authoring. Reach across to it explicitly rather than
+# belongs to belay-authoring. Reach across to it explicitly rather than
 # duplicating lesson discovery, YAML parsing or frontmatter splitting here -
 # this script consumes bl.load_bundle, bl.Lesson and bl._ANCHOR_RE (by way
 # of bl.Bundle.design_anchors(), which wraps the same regex) exactly as the
 # authoring toolkit's own scripts do.
 _SCRIPTS_DIR = Path(__file__).resolve().parent
-_AUTHORING_SCRIPTS = _SCRIPTS_DIR.parents[1] / "tutorail-authoring" / "scripts"
+_AUTHORING_SCRIPTS = _SCRIPTS_DIR.parents[1] / "belay-authoring" / "scripts"
 
 try:
     import bundlelib as bl
@@ -422,7 +422,7 @@ def _coverage_section(heading: str, body: str) -> dict:
             parser could not read a topic out of it. That is a finding about
             THIS PARSER, and a reader must not report it as "no topics
             declared" - which is exactly the false statement
-            tutorail-authoring#10 caught this script making about
+            belay-authoring#10 caught this script making about
             rust-automaton-db, where 45 topics sat in a ```text fence.
 
     Both of those are different again from "no matching heading at all",
@@ -522,7 +522,7 @@ def coverage_list(course_text: str | None) -> dict | None:
     portable-fixed-window-rate-limiter, webgl-typescript-scene) and a FENCED
     BLOCK, one topic per non-empty line (rust-automaton-db, `COURSE.md:225`,
     45 topics inside a ```text fence). Reading only the first form is
-    tutorail-authoring#10: the script reported an empty list and the
+    belay-authoring#10: the script reported an empty list and the
     Markdown report said the author "never filled it in", which was false,
     and which would have suppressed five real coverage gaps had the auditor
     believed it.
@@ -654,11 +654,11 @@ def gather_supplies(bundle: bl.Bundle) -> list[dict]:
 
 
 # --------------------------------------------------------------------------
-# The unsupplied setup step (tutorail-authoring#11, item 3)
+# The unsupplied setup step (belay-authoring#11, item 3)
 #
 # A learner reached the first lesson of a portable course, found that it
 # assigned creating the project skeleton, and asked for the files instead
-# (skomp/tutorail-bundles#3). Neither instrument saw it: the validator does
+# (skomp/belay-bundles#3). Neither instrument saw it: the validator does
 # not require a `supplies` entry, and the toil scanner above holds a fixed
 # verb list that produced no candidate for two of the five catalogue
 # bundles.
@@ -1173,7 +1173,7 @@ def topic_candidates_for(
 
 
 # --------------------------------------------------------------------------
-# Symbols a lesson uses and nothing introduces (tutorail-authoring#14).
+# Symbols a lesson uses and nothing introduces (belay-authoring#14).
 #
 # THE SAME DISCIPLINE AS EVERY OTHER SCANNER HERE, AND MORE STRICTLY: this
 # TABULATES candidates, it does not classify them. The author ruled that the
@@ -1237,7 +1237,7 @@ SYMBOL_RULE = (
 )
 
 # --------------------------------------------------------------------------
-# tutorail-authoring#18 - two more candidate channels, for the same row.
+# belay-authoring#18 - two more candidate channels, for the same row.
 #
 # The audit of 2026-09-15 answered the undefined-symbol row by hand across
 # five bundles and found six symbols. The short-token channel above found
@@ -1407,7 +1407,7 @@ def strip_fenced_blocks(text: str) -> tuple[str, int]:
     Fenced blocks are skipped DELIBERATELY and the count is reported, so that
     "this bundle has no inline symbols" can never be confused with "this
     bundle writes everything inside fences and the scanner never looked" -
-    the failure shape tutorail-authoring#10 describes for the coverage-list
+    the failure shape belay-authoring#10 describes for the coverage-list
     parser. A bundle whose fence count is high and whose candidate count is
     zero is a bundle to read by hand.
     """
@@ -1573,7 +1573,7 @@ def _definition_cues(span: str, *, bare_word: bool = False) -> list[tuple[str, r
     rust-automaton-db/lessons/10-storage-durability.md:22, "make one logical
     row write atomic in the WAL" - the noun "write", read as the verb, bound
     `WAL` in a lesson that never introduces it, and that is precisely the
-    finding tutorail-authoring#18 exists to surface. In bare-word mode the
+    finding belay-authoring#18 exists to surface. In bare-word mode the
     verb must open the sentence or a clause, and "write" is not one of the
     verbs.
     """
@@ -1846,7 +1846,7 @@ def concepts_symbols(lesson_text: str) -> tuple[bool, dict[str, dict]]:
     with no `## Concepts to teach` section and a lesson whose section names
     no symbol both yield an empty dict, and only the first means "this
     evidence channel does not exist here". Collapsing the two is the shape of
-    bug tutorail-authoring#10 describes and the shape `coverage_list` already
+    bug belay-authoring#10 describes and the shape `coverage_list` already
     guards against by returning None rather than [].
 
     A concept bullet names a symbol either in backticks ("the symbols `N`
@@ -1966,7 +1966,7 @@ def design_symbol_index(design_text: str) -> dict[str, dict]:
 # lesson 01 has met no definition), which is why it sits below the
 # same-lesson buckets rather than beside `concepts`.
 #
-# `concepts` MOVED DOWN in tutorail-authoring#18, from the top of this list
+# `concepts` MOVED DOWN in belay-authoring#18, from the top of this list
 # to just below every prose bucket. It used to outrank a real defining
 # sentence, which meant that for `N` in portable-fixed-window-rate-limiter
 # the report showed the weakest evidence and hid the strongest. The issue
@@ -2065,7 +2065,7 @@ def _bind(
 ) -> str:
     """The `binding` label: a PURE FUNCTION of the evidence columns.
 
-    Two channel-dependent rules, both from tutorail-authoring#18 and both
+    Two channel-dependent rules, both from belay-authoring#18 and both
     documented at `_BINDING_ORDER`: a `concept-phrase` candidate cannot be
     bound by the Concepts bullet that PRODUCED it, and only a
     `concept-phrase` candidate can be bound by a `## Theory` mention.
@@ -2158,10 +2158,10 @@ def build_symbol_evidence(bundle: bl.Bundle) -> dict:
     `channel` that produced it:
 
       * `short-token` - a 1-2 character identifier in an expression-shaped
-        backticked span (tutorail-authoring#14).
+        backticked span (belay-authoring#14).
       * `concept-phrase` - a multi-word `## Concepts to teach` term that the
-        course also uses outside that section (tutorail-authoring#18).
-      * `acronym` - a 2-to-5 letter all-capitals run (tutorail-authoring#18).
+        course also uses outside that section (belay-authoring#18).
+      * `acronym` - a 2-to-5 letter all-capitals run (belay-authoring#18).
 
     `status` separates NOTHING TO CHECK from CHECKED AND CLEAN. A bundle
     whose lessons declare no `## Concepts to teach` section anywhere, or
@@ -2240,7 +2240,7 @@ def build_symbol_evidence(bundle: bl.Bundle) -> dict:
     candidates: list[dict] = []
 
     # ----------------------------------------------------------------------
-    # Channel 1: short backticked tokens (tutorail-authoring#14).
+    # Channel 1: short backticked tokens (belay-authoring#14).
     #
     # Every distinct symbol is looked for in EVERY lesson, so that a
     # definition in a different lesson is a column of its own rather than an
@@ -2570,7 +2570,7 @@ def render_markdown(data: dict) -> str:
             "boundary for a tutor to check a blocked learner's topic against."
         )
     elif not cov["topics"] and cov["scan"]["body_lines"]:
-        # tutorail-authoring#10. THIS branch is the one the old code got
+        # belay-authoring#10. THIS branch is the one the old code got
         # wrong: it printed "the author never filled it in" over a section
         # that held 45 topics in a fence. Never say what the author did or
         # did not write when nothing was read - say that nothing was read.

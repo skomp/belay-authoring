@@ -2,7 +2,7 @@
 
 > ## RULED 2026-09-13 — a project skeleton is toil. This report HAS been re-scored.
 >
-> **What was asked.** `skomp/tutorail-bundles#3` reports a learner who reached this class of
+> **What was asked.** `skomp/belay-bundles#3` reports a learner who reached this class of
 > step, said *"can you create the base setup for me, there is no learning in that"*, and
 > changed `ownership_policy` in their own instance so the tutor would do it. That happened
 > twice, in two different courses.
@@ -21,7 +21,7 @@
 >
 > `npm install` is unambiguous under both tests, because `node_modules` cannot ship. A
 > project skeleton was not, and the rubric did not say which test wins. Filed as
-> `skomp/tutorail-authoring#11`.
+> `skomp/belay-authoring#11`.
 >
 > **What the author ruled, 2026-09-13.** When the two tests disagree, **the shippability
 > test wins, and a project skeleton is toil**. The shippability question is asked in its
@@ -71,16 +71,16 @@
 > **toil, −2**; lesson 00 moves from +9 to **+6**; the course total moves from 35 to **32**;
 > and the total a learner who declines every offer earns moves from 27 to **24**.
 
-Audited 2026-09-13 against `tutorail-authoring:course-quality` v0.3.0 and its
+Audited 2026-09-13 against `belay-authoring:course-quality` v0.3.0 and its
 `references/rubric.md`. Read-only: no file in the bundle was created, edited or staged.
 
-Bundle path: `/Users/robert/src/github.com/skomp/tutorail-bundles/portable-fixed-window-rate-limiter`
+Bundle path: `/Users/robert/src/github.com/skomp/belay-bundles/portable-fixed-window-rate-limiter`
 
 Evidence gathered with:
 
 ```
-cd /Users/robert/.claude/plugins/cache/tutorail-authoring/tutorail-authoring/0.3.0/skills/course-quality
-python3 scripts/audit.py /Users/robert/src/github.com/skomp/tutorail-bundles/portable-fixed-window-rate-limiter
+cd /Users/robert/.claude/plugins/cache/belay-authoring/belay-authoring/0.3.0/skills/course-quality
+python3 scripts/audit.py /Users/robert/src/github.com/skomp/belay-bundles/portable-fixed-window-rate-limiter
 ```
 
 All four lessons, `tutorial.yaml`, `COURSE.md`, `DESIGN.md` and `STATE.template.md` were
@@ -510,18 +510,18 @@ artifact is the learner's own code, which no `supplies:` entry could or should p
 
 ---
 
-> **SETTLED, `tutorail-authoring#11` — the `00:51-52` rejection above is overturned.** The
+> **SETTLED, `belay-authoring#11` — the `00:51-52` rejection above is overturned.** The
 > rejection assumed one fixed `--from` path. A portable bundle can ship one skeleton per
 > supported language and let the tutor choose after `00:50`. The author ruled on 2026-09-13
 > that the step is toil: the element has moved +1 -> −2 and the course scores **32**, not
 > 35. A learner hit exactly this step and asked for the setup
-> (`skomp/tutorail-bundles#3`). The rule now lives in
+> (`skomp/belay-bundles#3`). The rule now lives in
 > `skills/course-quality/references/rubric.md`.
 
 ## 5. Proposals
 
 Every one is a concrete action, and every one is refusable. Applying any of them is the
-`tutorail-authoring` skill's job, not this one's; nothing in the bundle was changed here.
+`belay-authoring` skill's job, not this one's; nothing in the bundle was changed here.
 
 ### Proposal 1 — give lesson 02's retention limitation an anchor that answers it
 
@@ -534,7 +534,7 @@ is per-key, in-memory and non-scanning, and says nothing about growth, eviction 
 A learner who follows the citation to find out why cleanup is not required does not find
 out.
 
-**Action.** Through `tutorail-authoring`, either extend `#state-model` with the retention
+**Action.** Through `belay-authoring`, either extend `#state-model` with the retention
 decision, or add a new anchor and cite it:
 
 ```
@@ -607,7 +607,7 @@ limiter is correct". The first is the smaller change and is probably right.
 smallest conventional runnable project for the language they chose at `:50`. Under the
 ruling of 2026-09-13 that is toil, −2, and it is the course's only toil site.
 
-**Action.** Through `tutorail-authoring`, add the skeletons to the bundle and declare them,
+**Action.** Through `belay-authoring`, add the skeletons to the bundle and declare them,
 one `supplies:` entry per supported language, then delete the clause from `:51-52`. For
 example, for a Go learner:
 
@@ -628,7 +628,7 @@ a `supplies:` entry places its files when its scope opens, and this bundle needs
 several* sets placed, chosen after `00:50` decides the language. Either the runner already
 supports that selection, or the toolkit needs a way to express it. The ruling states the
 tutor selects the set after the learner selects the language; how that is declared is a
-`tutorail-authoring` question, not a scoring one. **The −2 stands either way** — the rubric
+`belay-authoring` question, not a scoring one. **The −2 stands either way** — the rubric
 charges what the bundle could have shipped, not what today's toolkit makes convenient.
 
 The learner keeps the language decision at `:50`, which is `teaching`, +2, and keeps

@@ -1,8 +1,8 @@
 # Course quality audit: `webgl-typescript-scene`
 
-Audited 2026-09-13 against `tutorail-authoring:course-quality` 0.3.0 and its
+Audited 2026-09-13 against `belay-authoring:course-quality` 0.3.0 and its
 `references/rubric.md`. Read-only: nothing in
-`/Users/robert/src/github.com/skomp/tutorail-bundles` was created, edited, staged or deleted.
+`/Users/robert/src/github.com/skomp/belay-bundles` was created, edited, staged or deleted.
 `git status --porcelain` was empty at the start and at the end of the audit.
 
 **Re-checked 2026-09-13 against the author's ruling "A project skeleton is toil"**, added to
@@ -596,13 +596,13 @@ happened to overlap it in two places.
 ## 5. Proposals
 
 Each names a concrete action. All are proposals; applying any of them is the
-`tutorail-authoring` skill's job, not this one's. Nothing in the bundle was changed here.
+`belay-authoring` skill's job, not this one's. Nothing in the bundle was changed here.
 
 ### P1 — Declare the starter files as supplies and delete the copy instruction (closes toil 1, +2)
 
 ```
-cd /Users/robert/.claude/plugins/cache/tutorail-authoring/tutorail-authoring/0.3.0/skills/tutorail-authoring
-python3 scripts/supplies.py add /Users/robert/src/github.com/skomp/tutorail-bundles/webgl-typescript-scene \
+cd /Users/robert/.claude/plugins/cache/belay-authoring/belay-authoring/0.3.0/skills/belay-authoring
+python3 scripts/supplies.py add /Users/robert/src/github.com/skomp/belay-bundles/webgl-typescript-scene \
   --from lessons/00-project-setup/starter \
   --to . \
   --describe "Plain HTML + TypeScript + esbuild starter shell: package.json, package-lock.json, tsconfig.json, index.html and src/main.ts" \
@@ -631,8 +631,8 @@ Effect: lesson `00` goes from **−1 to +1** and the learner loses nothing.
 ### P2 — Declare the model files as supplies and delete the copy instruction (closes toil 2, +2)
 
 ```
-cd /Users/robert/.claude/plugins/cache/tutorail-authoring/tutorail-authoring/0.3.0/skills/tutorail-authoring
-python3 scripts/supplies.py add /Users/robert/src/github.com/skomp/tutorail-bundles/webgl-typescript-scene \
+cd /Users/robert/.claude/plugins/cache/belay-authoring/belay-authoring/0.3.0/skills/belay-authoring
+python3 scripts/supplies.py add /Users/robert/src/github.com/skomp/belay-bundles/webgl-typescript-scene \
   --from lessons/13-load-gltf-model/model \
   --to models \
   --describe "Khronos glTF Sample Assets Duck GLB with its SCEA licence, Khronos metadata licence and attribution" \

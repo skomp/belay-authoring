@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared machinery for the tutorail-authoring test suites.
+"""Shared machinery for the belay-authoring test suites.
 
 No pytest. Nothing is installed in this environment, so every suite is a
 plain `python3 tests/test_*.py` runner and this module is what they share.
@@ -41,7 +41,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent
-SCRIPTS = REPO / "skills" / "tutorail-authoring" / "scripts"
+SCRIPTS = REPO / "skills" / "belay-authoring" / "scripts"
 FIXTURES = HERE / "fixtures"
 
 INDEX = SCRIPTS / "index.py"
@@ -51,7 +51,7 @@ CATALOG = SCRIPTS / "catalog.py"
 RUNNER = SCRIPTS / "runner.py"
 SUPPLIES = SCRIPTS / "supplies.py"
 
-# course-quality is a separate skill from tutorail-authoring, with its own
+# course-quality is a separate skill from belay-authoring, with its own
 # scripts directory. Its scripts are run as subprocesses, like every other
 # script here - never imported - so there is no second sys.path.insert for
 # it below, and none should be added: a second entry would put two script
@@ -191,7 +191,7 @@ def folds_case(directory: Path) -> bool:
     the caller's fixture, so a case that compares its fixture against this
     answer is not asking the fixture to grade itself.
     """
-    probe = Path(tempfile.mkdtemp(prefix="tutorail-casefold-", dir=directory))
+    probe = Path(tempfile.mkdtemp(prefix="belay-casefold-", dir=directory))
     try:
         (probe / "casefold.probe").write_text("", encoding="utf-8")
         return (probe / "CASEFOLD.PROBE").exists()
@@ -236,7 +236,7 @@ def tree_digest(root: Path) -> str:
 class Workspace:
     """A temp directory that cleans itself up."""
 
-    def __init__(self, prefix: str = "tutorail-test-") -> None:
+    def __init__(self, prefix: str = "belay-test-") -> None:
         self.root = Path(tempfile.mkdtemp(prefix=prefix))
 
     def __enter__(self) -> "Workspace":
@@ -318,12 +318,12 @@ def no_runner_env(home: Path) -> dict[str, str]:
     """An environment in which the validator search must find nothing.
 
     HOME is redirected at an empty directory, so search locations 2, 3 and 4
-    all resolve under it and miss, and TUTORAIL_VALIDATOR is removed so
+    all resolve under it and miss, and BELAY_VALIDATOR is removed so
     location 1 does not answer either. bundlelib uses os.path.expanduser,
     which reads HOME, so this genuinely exercises the same code path a
     machine without the runner would.
     """
-    return {"HOME": str(home), "TUTORAIL_VALIDATOR": None}  # type: ignore[dict-item]
+    return {"HOME": str(home), "BELAY_VALIDATOR": None}  # type: ignore[dict-item]
 
 
 STUB_VALIDATOR = '''#!/usr/bin/env python3
@@ -336,7 +336,7 @@ is exercised too.
 """
 import sys
 
-print("tutorAIl validator - mode: bundle")
+print("Belay validator - mode: bundle")
 print("target:      " + sys.argv[-1])
 print("")
 print("FAIL - 1 finding(s):")

@@ -6,7 +6,7 @@ Run: python3 tests/test_audit.py
 `audit.py` lives in a different skill (`skills/course-quality/`) from every
 other script this suite exercises, so it is run as a SUBPROCESS, exactly the
 way every other suite here runs its script - never imported. `harness.py`
-already inserts `skills/tutorail-authoring/scripts` onto `sys.path` for the
+already inserts `skills/belay-authoring/scripts` onto `sys.path` for the
 authoring scripts; a second insert for `skills/course-quality/scripts` would
 put two script directories on one path, and any module name they share (this
 script imports `bundlelib`, which is not its own) would then resolve by
@@ -14,7 +14,7 @@ insert order rather than by which directory actually owns it.
 
 The toil scanner is a CANDIDATE GENERATOR, not a verdict, and this suite
 tests that discipline directly with a real positive and a real negative
-control, both drawn from the actual tutorail-bundles corpus:
+control, both drawn from the actual belay-bundles corpus:
 
   * POSITIVE - the copy-the-starter constraint from
     webgl-typescript-scene/lessons/00-project-setup/LESSON.md:34, reproduced
@@ -459,7 +459,7 @@ def case_topic_candidates_stem_and_read_concepts() -> None:
 
 
 # --------------------------------------------------------------------------
-# Short symbols a lesson uses and nothing introduces (tutorail-authoring#14).
+# Short symbols a lesson uses and nothing introduces (belay-authoring#14).
 #
 # Every case below reads `symbol-course`, a fixture built to carry ONE symbol
 # of each binding kind, so that each bucket has a control and no bucket can
@@ -490,7 +490,7 @@ def symbol_evidence(bundle: Path) -> dict:
 def bucket(ev: dict, name: str, channel: str | None = None) -> list[dict]:
     """The candidates in one binding bucket, optionally of ONE channel.
 
-    tutorail-authoring#18 added two more candidate channels to the same list
+    belay-authoring#18 added two more candidate channels to the same list
     (`concept-phrase` and `acronym`). Every case below that was written for
     the short-token channel of #14 now names that channel explicitly, so a
     #14 assertion cannot be silently satisfied - or silently broken - by a
@@ -619,7 +619,7 @@ def case_introduced_symbol_is_not_reported_as_unbound() -> None:
     change under this file. A scanner that reported `N` here would be wrong
     about the real bundle too.
 
-    tutorail-authoring#18 changed WHICH channel is reported as introducing
+    belay-authoring#18 changed WHICH channel is reported as introducing
     it. `concepts` used to outrank every prose bucket, so the report showed
     the weakest evidence and hid the strongest; the issue states that a
     symbol named in '## Concepts to teach' is NOT thereby introduced, and the
@@ -773,7 +773,7 @@ def case_nothing_to_check_is_not_checked_and_clean() -> None:
     """
     clean = symbol_evidence(FIXTURES / "symbol-course")
 
-    # `toil-course` is no longer candidate-free: tutorail-authoring#18 reads
+    # `toil-course` is no longer candidate-free: belay-authoring#18 reads
     # its '## Concepts to teach' sections, and "Texture units, samplers,
     # wrapping, filtering." holds a multi-word term the lessons use. So the
     # empty half of this pair is BUILT, by replacing each Concepts section
@@ -908,7 +908,7 @@ def case_json_and_markdown_agree_on_shape() -> None:
 
 
 # --------------------------------------------------------------------------
-# A coverage list written inside a fenced block (tutorail-authoring#10).
+# A coverage list written inside a fenced block (belay-authoring#10).
 #
 # The measured defect: `audit.py` read the coverage list as Markdown list
 # items ONLY. `rust-automaton-db/COURSE.md:225` opens a ```text fence holding
@@ -918,7 +918,7 @@ def case_json_and_markdown_agree_on_shape() -> None:
 #
 # The fixture is `tests/fixtures/rust-automaton-db`, which is IN THIS REPO
 # and whose COURSE.md is the real one byte for byte. The sibling
-# tutorail-bundles checkout is deliberately not read from here: it moves.
+# belay-bundles checkout is deliberately not read from here: it moves.
 #
 # Four cases, and each is a control on its neighbour:
 #
@@ -1231,7 +1231,7 @@ def case_markdown_never_claims_an_unread_section_is_empty() -> None:
 
 
 # --------------------------------------------------------------------------
-# tutorail-authoring#18 - the concept-phrase and acronym channels.
+# belay-authoring#18 - the concept-phrase and acronym channels.
 #
 # The audit of 2026-09-15 answered the undefined-symbol row by hand across
 # five bundles and found six symbols, and the short-token channel of #14
@@ -1595,7 +1595,7 @@ def case_channels_are_named_on_every_row_and_in_the_markdown() -> None:
 
 
 # --------------------------------------------------------------------------
-# The unsupplied setup step (tutorail-authoring#11, item 3)
+# The unsupplied setup step (belay-authoring#11, item 3)
 #
 # The detector finds NOTHING in all five bundles of the catalogue today, and
 # that is the expected result: two of them supply the file, two hand the
@@ -1605,7 +1605,7 @@ def case_channels_are_named_on_every_row_and_in_the_markdown() -> None:
 # evidence.
 #
 # `unsupplied-setup-course` reproduces the shape the learner hit in
-# skomp/tutorail-bundles#3 - lesson 00 assigns creating the project, no
+# skomp/belay-bundles#3 - lesson 00 assigns creating the project, no
 # `supplies` entry, no declared hand-over - and MUST fire. Every near-miss
 # is derived from that one fixture by a single edit, so a near-miss that
 # stays silent is silent because of the edit and not because the fixture

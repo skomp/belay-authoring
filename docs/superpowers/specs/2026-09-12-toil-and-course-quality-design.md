@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-12
 **Status:** approved
-**Repositories:** `skomp/tutorAIl` (runner, the format) and `skomp/tutorail-authoring` (this one)
+**Repositories:** `skomp/belay` (runner, the format) and `skomp/belay-authoring` (this one)
 
 ---
 
@@ -53,14 +53,14 @@ The test that separates them, and the sentence the authoring skills must carry:
 
 ## 3. Measured facts — do not re-derive
 
-Verified on this machine, 2026-09-12, against `skomp/tutorAIl` at `1697874` and
-`skomp/tutorail-bundles` at `76dcdce`. First measured at tutorAIl `0b1c422` and
+Verified on this machine, 2026-09-12, against `skomp/belay` at `1697874` and
+`skomp/belay-bundles` at `76dcdce`. First measured at Belay `0b1c422` and
 **re-verified at `1697874`** after three commits landed there mid-session: every line
 number below still holds, and the only change to `bundle-format.md` was wording.
 
 | Fact | Where |
 |---|---|
-| The runner plugin resolves to `/Users/robert/.agents/skills/tutorail`, a **symlink** into `~/src/github.com/skomp/tutorAIl/skills/tutorail` | `scripts/runner.py --root` |
+| The runner plugin resolves to `/Users/robert/.agents/skills/belay`, a **symlink** into `~/src/github.com/skomp/belay/skills/belay` | `scripts/runner.py --root` |
 | `KNOWN_BUNDLE_FORMATS = (1,)`; the validator rejects an unknown `bundle_format` | `validate_bundle.py:143`, `:654` |
 | The validator does **not** reject unknown manifest keys or unknown lesson frontmatter keys. Only `catalog.yaml` gets an unknown-key check (`:2478`) | `validate_bundle.py` |
 | `optional_lessons` is the precedent for an additive key: "the key is additive to bundle_format 1" | `bundle-format.md:1197` |
@@ -215,7 +215,7 @@ question is asked, and the check's `ran` line must not imply otherwise.
 
 | File | Change |
 |---|---|
-| `skills/tutorail-authoring/SKILL.md` | a new rule in "The rules that override every other consideration": **toil is declared, not taught**, with the section 2 test and the named examples. A line in the delivery self-check: run the course audit before delivering. A row in the "what you write / what the toolkit writes" table putting `supplies:` on the toolkit's side. |
+| `skills/belay-authoring/SKILL.md` | a new rule in "The rules that override every other consideration": **toil is declared, not taught**, with the section 2 test and the named examples. A line in the delivery self-check: run the course audit before delivering. A row in the "what you write / what the toolkit writes" table putting `supplies:` on the toolkit's side. |
 | `references/interview-create.md` | during the interview, capture the workspace the course assumes and the assets each lesson hands over, and record them in the spec as supplies. A lesson proposal that is only setup is not a lesson. |
 | `references/interview-modify.md` | the same test for any new or changed lesson, and a named repair for the reported symptom: "the tutor made me copy files" means that prose moves into `supplies:`. |
 | `references/course-spec-format.md` | a **Supplied files** section in the spec; every lesson entry states the objective it serves and the instructive failure it contains. |
@@ -387,7 +387,7 @@ Every proposal names a concrete action, not a sentiment:
   should be dropped;
 - a lesson scoring at or below zero becomes a question for the author about what it is for.
 
-The skill **proposes**. Applying goes back through `tutorail-authoring` and its toolkit,
+The skill **proposes**. Applying goes back through `belay-authoring` and its toolkit,
 after the author says yes. The audit never edits a bundle.
 
 ## 10. Testing
@@ -412,7 +412,7 @@ which is exactly what this work does. Every result quoted as verification here m
 from a run against a pinned copy:
 
 ```
-git -C <tutorAIl> show HEAD:skills/tutorail/scripts/validate_bundle.py > <pinned>/validate_bundle.py
+git -C <belay> show HEAD:skills/belay/scripts/validate_bundle.py > <pinned>/validate_bundle.py
 ```
 
 An unpinned red suite during this work proves nothing about the code under test.

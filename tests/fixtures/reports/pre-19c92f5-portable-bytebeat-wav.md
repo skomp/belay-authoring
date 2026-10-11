@@ -2,7 +2,7 @@
 
 > ## OPEN QUESTION, raised 2026-09-13 after publication — the project-skeleton rulings are unsettled
 >
-> `skomp/tutorail-bundles#3` reports a learner who reached this class of step, said *"can
+> `skomp/belay-bundles#3` reports a learner who reached this class of step, said *"can
 > you create the base setup for me, there is no learning in that"*, and changed
 > `ownership_policy` in their own instance so the tutor would do it. That happened twice, in
 > two different courses.
@@ -20,18 +20,18 @@
 >
 > `npm install` is unambiguous under both tests, because `node_modules` cannot ship. A
 > project skeleton is not, and the rubric does not say which test wins. Filed as
-> `skomp/tutorail-authoring#11`.
+> `skomp/belay-authoring#11`.
 >
 > **The score consequence is stated below with each affected element.** Nothing is
 > re-scored here: the ruling belongs to the author, and a report patched to agree with a
 > ruling that has not been made would be worse than one that says it is open.
 
-Audited 2026-09-13 against `tutorail-authoring:course-quality` v0.3.0 and its rubric.
-Read-only: no file in `/Users/robert/src/github.com/skomp/tutorail-bundles` was created,
+Audited 2026-09-13 against `belay-authoring:course-quality` v0.3.0 and its rubric.
+Read-only: no file in `/Users/robert/src/github.com/skomp/belay-bundles` was created,
 edited, staged or deleted. Bundle checksums taken at the start and end of the audit are
 identical and `git status` is clean, so nothing changed under me.
 
-Every finding below is a **proposal**. Applying any of them is the `tutorail-authoring`
+Every finding below is a **proposal**. Applying any of them is the `belay-authoring`
 skill's job, after the author says yes.
 
 ---
@@ -351,10 +351,10 @@ laying out the RIFF header bytes — is also the thing the course exists to teac
   package install; no `supplies:` entry can create either. The rubric's last clause is explicit
   that this is the learner's setup. Scored +2 on its own merits, not −2.
 
-> **OPEN, `tutorail-authoring#11` — the `00:57` rejection above.** Five language tracks mean
+> **OPEN, `belay-authoring#11` — the `00:57` rejection above.** Five language tracks mean
 > five shippable skeletons, not none. If the author rules the step toil, the element goes
 > +2 -> -2 and the course scores **50**, not 54. Note that this report scored the act +2
-> where the rate-limiter report scored the same act +1 (`skomp/tutorail-bundles#3`).
+> where the rate-limiter report scored the same act +1 (`skomp/belay-bundles#3`).
 
 - `lessons/01-write-a-tone.md:61` — "Inspect the file size and, where available, use an installed
   file-inspection tool." **Rejected: could not have been supplied** (the tool is in the learner's
@@ -582,4 +582,4 @@ Two assertions in the dispatch, checked:
 - The brief's first scratchpad path was correct and its in-brief "correction" named a directory that
   does not exist (session id `…83f435a75604`). The only session directory present is
   `…83f835a75604`, which the coordinator's later message confirmed. This report is written to
-  `/private/tmp/claude-501/-Users-robert-src-github-com-skomp-tutorail-bundles/02117994-91ab-407b-b475-83f835a75604/scratchpad/audit-portable-bytebeat-wav.md`.
+  `/private/tmp/claude-501/-Users-robert-src-github-com-skomp-belay-bundles/02117994-91ab-407b-b475-83f835a75604/scratchpad/audit-portable-bytebeat-wav.md`.

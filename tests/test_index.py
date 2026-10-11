@@ -392,7 +392,7 @@ def case_no_purpose_section() -> None:
     `foldered-bundle/lessons/00-start.md` writes its title as an UNQUOTED
     scalar containing a colon followed by a space. Plain YAML does not permit
     that; the runner's restricted reader accepts it. After
-    tutorail-authoring#21 quoted the two titles in the rust-automaton-db
+    belay-authoring#21 quoted the two titles in the rust-automaton-db
     fixture - where they were wrong, because the live bundle quotes them -
     this is the ONLY place in the suite where that lenient path is exercised,
     and the only place where a lesson title's parsed value is asserted
@@ -401,7 +401,7 @@ def case_no_purpose_section() -> None:
     bundle, so the colon cannot be "corrected" away by a later sync.
 
     If the reader is changed to reject an unquoted colon scalar - a question
-    that belongs to skomp/tutorAIl, which owns it - this case is what fails,
+    that belongs to skomp/belay, which owns it - this case is what fails,
     and it is meant to fail rather than be quietly re-quoted.
     """
     with Workspace() as ws:

@@ -52,6 +52,6 @@ solution_code: on-request-only
 advance_on: validated-evidence-only
 
 instance:
-  materialized_from: local:../tutorail-bundles/rust-automaton-db
+  materialized_from: local:../belay-bundles/rust-automaton-db
   materialized_at: 2026-09-11
   runner_version: 1

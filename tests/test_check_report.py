@@ -41,7 +41,7 @@ THE LIVE CORPUS, AND WHY A PASS ON IT MEANS SOMETHING
 
 The suite also runs the script over the ten reports in `docs/audits/`. They
 are expected to be clean - that is the acceptance criterion of
-`skomp/tutorail-authoring#12`, and it is also a standing regression guard: a
+`skomp/belay-authoring#12`, and it is also a standing regression guard: a
 report edited into inconsistency turns this suite red.
 
 A clean run over ten files proves nothing on its own, so every one of those
@@ -335,7 +335,7 @@ with tempfile.TemporaryDirectory() as raw:
 
 with case("the checker reads reports and nothing else"):
     text = CHECK_REPORT.read_text(encoding="utf-8")
-    for forbidden in ("tutorial.yaml", "validate_bundle", "TUTORAIL_VALIDATOR"):
+    for forbidden in ("tutorial.yaml", "validate_bundle", "BELAY_VALIDATOR"):
         check_not_in(forbidden, text, f"check_report.py does not reach for {forbidden}")
     note("the script reads the report only. It reads no bundle and computes no score, "
          "which is what keeps it clear of the rule that audit.py computes no score.")

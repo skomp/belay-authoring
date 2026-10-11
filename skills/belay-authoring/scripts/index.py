@@ -190,7 +190,7 @@ def build(bundle: bl.Bundle) -> tuple[list[str], int]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="index.py", description="Print a compact index of a tutorAIl bundle."
+        prog="index.py", description="Print a compact index of a Belay bundle."
     )
     parser.add_argument("bundle", help="the bundle directory")
     args = parser.parse_args(argv)

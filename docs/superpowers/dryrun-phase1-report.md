@@ -1,7 +1,7 @@
 # Dry-run harness, phase 1
 
 Date: 2026-09-12. Commits: `60136f3` (the harness), `6b9bb26` (the `--seed` rule and
-this report). Issue: skomp/tutorail-authoring#5.
+this report). Issue: skomp/belay-authoring#5.
 
 Status: **done and green**. `python3 tests/run_all.py` passes all 11 suites.
 `tests/test_dryrun.py` contributes **133 assertions** across 30 cases and declares

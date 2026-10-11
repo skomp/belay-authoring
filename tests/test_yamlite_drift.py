@@ -3,8 +3,8 @@
 
 Run it:  python3 tests/test_yamlite_drift.py
 
-skills/tutorail-authoring/scripts/yamlite.py is a byte-for-byte copy of the
-runner's skills/tutorail/scripts/yamlite.py, with a provenance banner of
+skills/belay-authoring/scripts/yamlite.py is a byte-for-byte copy of the
+runner's skills/belay/scripts/yamlite.py, with a provenance banner of
 comment lines prepended. It is copied rather than imported so index.py and
 catalog.py, which mutate nothing, work without the runner installed.
 
@@ -178,7 +178,7 @@ def main() -> int:
     except bl.ToolError as exc:
         print("!" * 72)
         print("SKIPPED - AND THAT IS A FAILURE, NOT A PASS.")
-        print("The tutorAIl runner could not be found, so the vendored yamlite.py")
+        print("The Belay runner could not be found, so the vendored yamlite.py")
         print("has NOT been compared against anything. A drift check that silently")
         print("skips reads as 'no drift' forever, which is the false oracle this")
         print("whole suite exists to avoid.")
@@ -220,7 +220,7 @@ def main() -> int:
         # The banner has to say where the copy came from, or the next reader
         # has no way to re-copy it.
         check_in(
-            "tutorAIl/skills/tutorail/scripts/yamlite.py",
+            "belay/skills/belay/scripts/yamlite.py",
             banner,
             "the banner names the upstream file it was copied from",
         )

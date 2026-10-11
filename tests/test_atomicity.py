@@ -119,7 +119,7 @@ def leftovers(bundle: Path) -> list[str]:
     return [
         name
         for name in h.listing(bundle.parent)
-        if name.startswith(".tutorail-stage-") or name.startswith(".tutorail-")
+        if name.startswith(".belay-stage-") or name.startswith(".belay-")
     ]
 
 
@@ -142,13 +142,13 @@ def test_missing_validator() -> None:
 
             check(done.returncode != 0, "exits non-zero rather than proceeding")
             check_in(
-                "tutorAIl runner is not installed",
+                "Belay runner is not installed",
                 done.output,
                 "says the runner must be installed",
             )
-            check_in("$TUTORAIL_VALIDATOR", done.output, "lists search location 1")
-            check_in("~/.agents/skills/tutorail", done.output, "lists search location 2")
-            check_in("~/.claude/skills/tutorail", done.output, "lists search location 3")
+            check_in("$BELAY_VALIDATOR", done.output, "lists search location 1")
+            check_in("~/.agents/skills/belay", done.output, "lists search location 2")
+            check_in("~/.claude/skills/belay", done.output, "lists search location 3")
             check_in("~/.claude/plugins", done.output, "lists search location 4")
             check(
                 h.tree_digest(bundle) == before,
@@ -224,7 +224,7 @@ def test_validator_rejects_the_result() -> None:
             script, args = build(bundle, instance)
 
             before = h.tree_digest(bundle)
-            done = run(script, *args, env={"TUTORAIL_VALIDATOR": str(stub)})
+            done = run(script, *args, env={"BELAY_VALIDATOR": str(stub)})
 
             check(done.returncode != 0, "exits non-zero when the result does not validate")
             check_in("is unchanged", done.output, "says the bundle is unchanged")
@@ -442,7 +442,7 @@ def main() -> int:
         validator, how = bl.find_validator()
         print(f"  runner:  {validator}  ({how})")
     except bl.ToolError:
-        print("  runner:  NOT FOUND - this suite needs the tutorAIl runner installed")
+        print("  runner:  NOT FOUND - this suite needs the Belay runner installed")
         return 2
     print()
 

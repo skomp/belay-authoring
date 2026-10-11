@@ -2,7 +2,7 @@
 
 ## Goal
 
-A trimmed copy of the real durable-event-broker course (tutorail-bundles), kept
+A trimmed copy of the real durable-event-broker course (belay-bundles), kept
 just big enough to exercise `--lesson` resolution against an optional lesson.
 
 ## Teaching philosophy

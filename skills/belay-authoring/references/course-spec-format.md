@@ -13,7 +13,7 @@ list.
 ## 1. Where it lives, and why it is not in the bundle
 
 ```
-tutorail-bundles/
+belay-bundles/
 ├── catalog.yaml
 ├── specs/
 │   └── rust-automaton-db.md        the course spec

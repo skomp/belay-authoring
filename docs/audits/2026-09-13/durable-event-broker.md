@@ -4,7 +4,7 @@
 >
 > ### What was asked, kept so the ruling can be read against it
 >
-> `skomp/tutorail-bundles#3` reports a learner who reached this class of step, said *"can
+> `skomp/belay-bundles#3` reports a learner who reached this class of step, said *"can
 > you create the base setup for me, there is no learning in that"*, and changed
 > `ownership_policy` in their own instance so the tutor would do it. That happened twice, in
 > two different courses.
@@ -22,7 +22,7 @@
 >
 > `npm install` was unambiguous under both tests, because `node_modules` cannot ship. A
 > project skeleton was not, and the rubric did not say which test won. Filed as
-> `skomp/tutorail-authoring#11`.
+> `skomp/belay-authoring#11`.
 >
 > ### What the author ruled, on 2026-09-13
 >
@@ -78,8 +78,8 @@
 > list that settled it.
 
 Audited read-only on 2026-09-13 against
-`tutorail-authoring:course-quality` 0.3.0 and its `references/rubric.md`.
-Bundle path: `/Users/robert/src/github.com/skomp/tutorail-bundles/durable-event-broker`
+`belay-authoring:course-quality` 0.3.0 and its `references/rubric.md`.
+Bundle path: `/Users/robert/src/github.com/skomp/belay-bundles/durable-event-broker`
 at commit `4df2624`. Nothing in the bundle was created, edited, staged or deleted;
 `git status --porcelain` was empty before and after.
 
@@ -691,9 +691,9 @@ that is deterministic, decision-free, and shippable.
 > (`tutorial.yaml:60`), that `workspace_kind` is `new-repository` (`:58`), and that the
 > module path is a decision the learner records at `:67`. The rejection treated the case as
 > the same shape as `npm install`. It is not: `node_modules` cannot ship under any language
-> and a skeleton can. The open note filed as `tutorail-authoring#11` predicted that a toil
+> and a skeleton can. The open note filed as `belay-authoring#11` predicted that a toil
 > ruling would move the element +2 -> −2 and the course to **128**, not 132
-> (`skomp/tutorail-bundles#3`). It did, subject to the exception check above. The
+> (`skomp/belay-bundles#3`). It did, subject to the exception check above. The
 > prediction was re-added element by element rather than trusted, and it holds.
 
 - **`lessons/13-observability-and-load.md:52`** — "then add a JSON log producer representing
@@ -737,7 +737,7 @@ rejected.
 ## 5. Proposals
 
 Every one of these is a proposal the author may refuse. None has been applied; applying any
-of them goes back through the `tutorail-authoring` skill and its toolkit.
+of them goes back through the `belay-authoring` skill and its toolkit.
 
 **P1 — Give `#record-model` the byte-ownership rule, or give L00 an anchor that has it.**
 `lessons/00-running-broker.md:4` cites `design_refs: [record-model]`. Its sharpest teaching
@@ -778,14 +778,14 @@ If the author wants that part handed over, the entry would be manifest-scope:
 
 ```
 python3 scripts/supplies.py add \
-  /Users/robert/src/github.com/skomp/tutorail-bundles/durable-event-broker \
+  /Users/robert/src/github.com/skomp/belay-bundles/durable-event-broker \
   --from testdata/service-logs.jsonl \
   --to testdata/service-logs.jsonl \
   --describe "Fictional multi-service JSON application logs, used as one opaque broker workload" \
   --check
 ```
 
-run from the `tutorail-authoring` skill's own directory, not this one. Two honest caveats.
+run from the `belay-authoring` skill's own directory, not this one. Two honest caveats.
 First, **`testdata/service-logs.jsonl` does not exist in the bundle** — the skill names that
 as the tell that something was never toil, and here it means the author would have to
 author the corpus before declaring it. Second, a `--lesson`-scoped entry is **not available
@@ -801,7 +801,7 @@ confirmed toil site is `00-running-broker.md:53`; the concrete action is to ship
 `go.mod` and `main.go` as a supplies entry, one set per supported language, and to change
 `:53` from "Create the module and a minimal broker executable" to a sentence that starts the
 learner at the supplied skeleton. That recovers the four points and removes the step the
-learner in `skomp/tutorail-bundles#3` refused to type. **Reword objective `:21` in the same
+learner in `skomp/belay-bundles#3` refused to type. **Reword objective `:21` in the same
 change.** It currently reads "Create a small Go module and executable without speculative
 package structure"; once the module is supplied, its first verb is no longer something the
 learner performs, and an objective left that way is an unserved-objective row waiting to

@@ -1,11 +1,11 @@
-# Course-quality audit, 2026-09-13 — every bundle in `skomp/tutorail-bundles`
+# Course-quality audit, 2026-09-13 — every bundle in `skomp/belay-bundles`
 
 > **SUPERSEDED on 2026-09-15.** The catalogue changed after this audit: five of its six
 > confirmed toil sites were repaired, two portable bundles moved their setup step to the
 > tutor, and two bundles began shipping a skeleton. The current audit is
 > [`2026-09-15-course-quality-all-bundles.md`](2026-09-15-course-quality-all-bundles.md).
 >
-> This report stays as the audit of record for `skomp/tutorail-bundles` as it stood on
+> This report stays as the audit of record for `skomp/belay-bundles` as it stood on
 > 2026-09-13, and for the project-skeleton ruling made that day. Its figures are correct for
 > the files it audited and are **not** current. Its `file:line` citations have moved.
 
@@ -34,7 +34,7 @@ sentence scored — lives there. This file is the index, not a substitute for it
 > Four of these five reports rejected a create-the-project step with the same words,
 > "the bundle could not have supplied the result", and scored it +2 (broker), +2
 > (bytebeat), +1 (rate limiter) and 0 (rust). A learner had already voted the other way
-> twice: `skomp/tutorail-bundles#3` records them saying *"can you create the base setup
+> twice: `skomp/belay-bundles#3` records them saying *"can you create the base setup
 > for me, there is no learning in that"* and changing `ownership_policy` in their own
 > instance so the tutor would do it.
 >
@@ -48,7 +48,7 @@ sentence scored — lives there. This file is the index, not a substitute for it
 > **Neither instrument detected the gap.** The validator does not require a `supplies:` entry,
 > the toil scanner has no pattern for it, and the rubric told each auditor to reject the
 > candidate. The learner found it; the tooling did not. **That half of
-> `tutorail-authoring#11` is still open**: the ruling settles the rubric question and not the
+> `belay-authoring#11` is still open**: the ruling settles the rubric question and not the
 > detection question, and nothing in the toolkit yet finds a missing skeleton on its own.
 >
 > ### What the author ruled
@@ -216,7 +216,7 @@ the plain shippability test answered yes and the tiebreak never fired. `npm inst
 `COURSE.md:225-271` are inside a fenced ` ```text ` block and the parser reads Markdown
 list items only, so `coverage_list.topics` comes back `[]`. That is indistinguishable from
 a course that declared no boundary, and taken at face value it hides all five gaps above.
-Filed as `tutorail-authoring#10`.
+Filed as `belay-authoring#10`.
 
 **The toil scanner found 5 candidates across 69 lessons and 3 of the 5 were false
 positives; 4 of the 6 confirmed sites it never saw.** Both sites it did find are in
@@ -233,15 +233,15 @@ full courses of work, and nothing in this report rests on a stall.
 
 ## Where the findings are tracked
 
-One issue per bundle, in `skomp/tutorail-bundles`, plus the tooling defect here:
+One issue per bundle, in `skomp/belay-bundles`, plus the tooling defect here:
 
 | Issue | Covers |
 |---|---|
-| `tutorail-bundles#5` | `portable-bytebeat-wav` — the stereo offer blocks lesson 03 |
-| `tutorail-bundles#6` | `webgl-typescript-scene` — two toil sites, no `supplies:` entries |
-| `tutorail-bundles#7` | `rust-automaton-db` — five coverage topics with no task |
-| `tutorail-bundles#8` | `durable-event-broker` — three unused threads made load-bearing |
-| `tutorail-bundles#9` | `portable-fixed-window-rate-limiter` — the retention anchor, and where concurrency safety belongs |
-| `tutorail-authoring#10` | `audit.py` does not read a fenced coverage list |
-| `tutorail-authoring#11` | the rubric question is **ruled** (2026-09-13, a skeleton is toil); the issue stays open for the half nothing detects — no validator rule and no scanner pattern finds a missing setup |
-| `tutorail-bundles#3` | the field report that raised it — per-language setup for the two portable bundles |
+| `belay-bundles#5` | `portable-bytebeat-wav` — the stereo offer blocks lesson 03 |
+| `belay-bundles#6` | `webgl-typescript-scene` — two toil sites, no `supplies:` entries |
+| `belay-bundles#7` | `rust-automaton-db` — five coverage topics with no task |
+| `belay-bundles#8` | `durable-event-broker` — three unused threads made load-bearing |
+| `belay-bundles#9` | `portable-fixed-window-rate-limiter` — the retention anchor, and where concurrency safety belongs |
+| `belay-authoring#10` | `audit.py` does not read a fenced coverage list |
+| `belay-authoring#11` | the rubric question is **ruled** (2026-09-13, a skeleton is toil); the issue stays open for the half nothing detects — no validator rule and no scanner pattern finds a missing setup |
+| `belay-bundles#3` | the field report that raised it — per-language setup for the two portable bundles |

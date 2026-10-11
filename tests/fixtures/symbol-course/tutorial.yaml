@@ -3,7 +3,7 @@ id: symbol-course
 title: A Short-Symbol Fixture
 description: >
   A minimal bundle for the short-symbol tabulation of
-  tutorail-authoring#14. It carries one symbol of each binding kind on
+  belay-authoring#14. It carries one symbol of each binding kind on
   purpose: `N` is introduced by a '## Concepts to teach' bullet AND by a
   defining sentence beside its first use, `K` is mentioned only by a
   DESIGN.md anchor, and `Q` is introduced nowhere at all. It also carries

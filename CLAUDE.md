@@ -1,4 +1,4 @@
-# tutorail-authoring
+# belay-authoring
 
 ## Where work is tracked
 
@@ -10,7 +10,7 @@ The table was a copy, and a copy goes stale: on 2026-09-13 it listed five issues
 closed and omitted six that were open. Read the issues with `gh issue list`.
 
 Issues that belong to a sibling repository stay in that repository. Use the qualified form
-`tutorail-bundles#3`, never a bare number.
+`belay-bundles#3`, never a bare number.
 
 Write every entry in ASD-STE100 Simplified Technical English. Keep identifiers, file paths
 and command names verbatim.
@@ -36,15 +36,15 @@ removed. It is operating guidance, not tracked work, so it belongs here.
 
 ## The format is the runner's to write, not ours
 
-`bundle-format.md` and `state-lifecycle.md` are the tutorAIl runner's normative contract. This
+`bundle-format.md` and `state-lifecycle.md` are the Belay runner's normative contract. This
 repository owns the authoring toolkit, the `course-quality` rubric and the audit reports, and
-nothing else. When a change needs a new manifest field, **file it in `skomp/tutorAIl` and stop
+nothing else. When a change needs a new manifest field, **file it in `skomp/belay` and stop
 there** -- do not offer to write the contract section, and do not write a toolkit that emits a
 field the contract has not defined yet, because the validator then warns about it.
 
 Told so on 2026-09-19, after this session offered to write the `bundle-format.md` section for
-the new `version` field it had just designed. Tracked as `tutorAIl#51` (the field),
-`tutorail-authoring#24` and `tutorail-authoring#25` (our half, both blocked on it).
+the new `version` field it had just designed. Tracked as `belay#51` (the field),
+`belay-authoring#24` and `belay-authoring#25` (our half, both blocked on it).
 
 A decision reached in this session and relayed to the runner session arrives there
 second-hand. Expect that session to confirm it with the owner before it changes the contract,
@@ -52,7 +52,7 @@ and say where a decision came from when you relay one.
 
 ## The validator comes from the runner plugin
 
-`validate_bundle.py` lives in the tutorAIl runner plugin. Every mutating script calls it.
+`validate_bundle.py` lives in the Belay runner plugin. Every mutating script calls it.
 
 **Pin the whole scripts directory when a test result must be attributable.** The file imports
 `yamlite` and `catalogs` from beside itself, so a single-file pin produces a validator that
@@ -60,8 +60,8 @@ cannot run, and it fails in a way that reads as product defects. The tell is
 `FAIL - 0 finding(s)`: a validator that fails while reporting nothing did not run.
 
 ```bash
-mkdir -p /tmp/pin && cp <runner>/skills/tutorail/scripts/*.py /tmp/pin/
-TUTORAIL_VALIDATOR=/tmp/pin/validate_bundle.py python3 tests/run_all.py
+mkdir -p /tmp/pin && cp <runner>/skills/belay/scripts/*.py /tmp/pin/
+BELAY_VALIDATOR=/tmp/pin/validate_bundle.py python3 tests/run_all.py
 ```
 
 ## grep on this machine is ugrep

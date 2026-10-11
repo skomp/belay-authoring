@@ -899,7 +899,7 @@ def main() -> int:
                 instance,
                 "lifetimes-and-borrows",
                 bundle,
-                env={"TUTORAIL_VALIDATOR": str(stub)},
+                env={"BELAY_VALIDATOR": str(stub)},
             )
             check(done.returncode != 0, f"non-zero exit (got {done.returncode})")
             check_in(
@@ -940,7 +940,7 @@ def main() -> int:
                 instance,
                 "lifetimes-and-borrows",
                 bundle,
-                env={"TUTORAIL_VALIDATOR": None},
+                env={"BELAY_VALIDATOR": None},
             )
             check(
                 control.returncode == 0,
@@ -1268,7 +1268,7 @@ def main() -> int:
                 bundle,
                 "--optional",
                 "--confirm",
-                env={"TUTORAIL_VALIDATOR": str(stub)},
+                env={"BELAY_VALIDATOR": str(stub)},
             )
             check(done.returncode != 0, "the stub validator's findings refuse the promotion")
             check(

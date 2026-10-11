@@ -1,13 +1,13 @@
 {
-  "name": "tutorail-authoring",
+  "name": "belay-authoring",
   "version": "0.4.0",
-  "description": "Two skills for tutorAIl bundles. tutorail-authoring interviews you about a course, then builds or changes a bundle correctly, ending the interview with a spec you approve before any lesson file is written. course-quality audits a bundle for what it teaches and where its toil is, and proposes rather than edits.",
+  "description": "Two skills for Belay bundles. belay-authoring interviews you about a course, then builds or changes a bundle correctly, ending the interview with a spec you approve before any lesson file is written. course-quality audits a bundle for what it teaches and where its toil is, and proposes rather than edits.",
   "author": {
     "name": "skomp",
     "url": "https://github.com/skomp"
   },
-  "homepage": "https://github.com/skomp/tutorail-authoring",
-  "repository": "https://github.com/skomp/tutorail-authoring",
+  "homepage": "https://github.com/skomp/belay-authoring",
+  "repository": "https://github.com/skomp/belay-authoring",
   "license": "MIT",
   "keywords": [
     "tutorial",

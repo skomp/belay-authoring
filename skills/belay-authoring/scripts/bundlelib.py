@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared machinery for the tutorail-authoring toolkit.
+"""Shared machinery for the belay-authoring toolkit.
 
 Stdlib only. Python 3.11.
 
@@ -173,7 +173,7 @@ def atomic_write_text(path: Path, text: str) -> None:
     A half-written file is never observable under `path`, which matters for
     catalog.py: it writes into a repository the user may be reading.
     """
-    handle, tmp = tempfile.mkstemp(dir=str(path.parent), prefix=".tutorail-", suffix=".tmp")
+    handle, tmp = tempfile.mkstemp(dir=str(path.parent), prefix=".belay-", suffix=".tmp")
     try:
         with os.fdopen(handle, "w", encoding="utf-8") as stream:
             stream.write(text)
@@ -413,17 +413,17 @@ def load_bundle(root: Path, *, subdir: str = "lessons") -> Bundle:
 
 VALIDATOR_NAME = "validate_bundle.py"
 
-INSTALL_HINT = """The tutorAIl runner is not installed, so neither its validator nor
+INSTALL_HINT = """The Belay runner is not installed, so neither its validator nor
 its references can be found. No file was changed.
 
 Looked for, in order:
-  1. $TUTORAIL_VALIDATOR
-  2. ~/.agents/skills/tutorail/scripts/validate_bundle.py
-  3. ~/.claude/skills/tutorail/scripts/validate_bundle.py
-  4. the newest ~/.claude/plugins/**/tutorail/**/scripts/validate_bundle.py
+  1. $BELAY_VALIDATOR
+  2. ~/.agents/skills/belay/scripts/validate_bundle.py
+  3. ~/.claude/skills/belay/scripts/validate_bundle.py
+  4. the newest ~/.claude/plugins/**/belay/**/scripts/validate_bundle.py
 
-Install the runner plugin (skomp/tutorAIl), or point $TUTORAIL_VALIDATOR at a
-checkout's skills/tutorail/scripts/validate_bundle.py.
+Install the runner plugin (skomp/belay), or point $BELAY_VALIDATOR at a
+checkout's skills/belay/scripts/validate_bundle.py.
 
 Running without it is not offered. The toolkit's one safety guarantee is that a
 mutating operation never leaves a bundle broken, and that guarantee is the
@@ -437,7 +437,7 @@ def _plugin_candidates(home: Path) -> list[Path]:
     try:
         found = [
             path
-            for path in base.glob(f"**/tutorail/**/scripts/{VALIDATOR_NAME}")
+            for path in base.glob(f"**/belay/**/scripts/{VALIDATOR_NAME}")
             if path.is_file()
         ]
     except OSError:  # pragma: no cover - unreadable tree
@@ -448,20 +448,20 @@ def _plugin_candidates(home: Path) -> list[Path]:
 def find_validator(env: dict[str, str] | None = None) -> tuple[Path, str]:
     """Return (path, how it was found). Raises ToolError when there is none."""
     env = os.environ if env is None else env
-    override = env.get("TUTORAIL_VALIDATOR")
+    override = env.get("BELAY_VALIDATOR")
     if override:
         path = Path(os.path.expanduser(override))
         if path.is_file():
-            return path, "$TUTORAIL_VALIDATOR"
+            return path, "$BELAY_VALIDATOR"
         raise ToolError(
-            f"$TUTORAIL_VALIDATOR is set to {override!r}, which is not a file. "
+            f"$BELAY_VALIDATOR is set to {override!r}, which is not a file. "
             f"Point it at a validate_bundle.py, or unset it to search the "
             f"installed plugins.\n\n{INSTALL_HINT}"
         )
     home = Path(os.path.expanduser("~"))
     for rel, label in (
-        (Path(".agents") / "skills" / "tutorail" / "scripts" / VALIDATOR_NAME, "~/.agents"),
-        (Path(".claude") / "skills" / "tutorail" / "scripts" / VALIDATOR_NAME, "~/.claude/skills"),
+        (Path(".agents") / "skills" / "belay" / "scripts" / VALIDATOR_NAME, "~/.agents"),
+        (Path(".claude") / "skills" / "belay" / "scripts" / VALIDATOR_NAME, "~/.claude/skills"),
     ):
         candidate = home / rel
         if candidate.is_file():
@@ -664,7 +664,7 @@ class Staged:
         # away - and the message must be the install hint, not a stack trace.
         find_validator()
         parent = self.bundle.parent
-        self.tmpbase = Path(tempfile.mkdtemp(dir=str(parent), prefix=".tutorail-stage-"))
+        self.tmpbase = Path(tempfile.mkdtemp(dir=str(parent), prefix=".belay-stage-"))
         self.root = self.tmpbase / self.bundle.name
         shutil.copytree(self.bundle, self.root, symlinks=True)
         return self

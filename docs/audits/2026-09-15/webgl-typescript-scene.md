@@ -1,7 +1,7 @@
 # Course quality audit: `webgl-typescript-scene`
 
-Audited 2026-09-15 against `tutorail-authoring:course-quality` and its `references/rubric.md`.
-Read-only: nothing in `/Users/robert/src/github.com/skomp/tutorail-bundles` was created, edited,
+Audited 2026-09-15 against `belay-authoring:course-quality` and its `references/rubric.md`.
+Read-only: nothing in `/Users/robert/src/github.com/skomp/belay-bundles` was created, edited,
 staged or deleted. `git status --porcelain` in that repository was empty at the start and at the
 end of this audit.
 
@@ -10,13 +10,13 @@ end of this audit.
 ```
 Audit provenance, 2026-09-15 — identical for all five bundles
 
-bundles     skomp/tutorail-bundles @ 221c164 (== origin/main, tree clean)
-rubric      skomp/tutorail-authoring @ 86c2bc7, plugin 0.4.0
+bundles     skomp/belay-bundles @ 221c164 (== origin/main, tree clean)
+rubric      skomp/belay-authoring @ 86c2bc7, plugin 0.4.0
             skills/course-quality/references/rubric.md
 validator   pinned copy of the WHOLE scripts directory from the source checkout
-            skomp/tutorAIl @ 717c575  ->  /private/tmp/claude-501/-Users-robert-src-github-com-skomp-tutorail-authoring/19f2342f-a334-4dd6-9b45-348b60a85a2d/scratchpad/pin/validate_bundle.py
+            skomp/belay @ 717c575  ->  /private/tmp/claude-501/-Users-robert-src-github-com-skomp-belay-authoring/19f2342f-a334-4dd6-9b45-348b60a85a2d/scratchpad/pin/validate_bundle.py
             (10 validate_bundle.py copies exist on this machine; this is the source one)
-yaml reader restricted built-in, ALWAYS — tutorAIl#29 decided at 7419722,
+yaml reader restricted built-in, ALWAYS — belay#29 decided at 7419722,
             "Parse YAML with the restricted reader always, never PyYAML".
             PyYAML 6.0.3 is importable here and is deliberately not used.
 verdicts    all five bundles: PASS - every applicable check ran and found nothing. exit 0
@@ -29,14 +29,14 @@ validator and *which* YAML reader produced it is a claim about a machine on a da
 
 ## What changed since the 2026-09-13 audit
 
-Two fixes landed in this bundle, both from `tutorail-bundles#6`:
+Two fixes landed in this bundle, both from `belay-bundles#6`:
 
 - **`b969892`** — lesson `00-project-setup`: the five-file copy instruction is deleted and the
   starter set is declared as a lesson-scope `supplies` entry.
 - **`221c164`** — lesson `13-load-gltf-model`: the four-file copy instruction is deleted and the
   model set is declared as a lesson-scope `supplies` entry.
 
-A third commit, **`d11644a`** (`tutorail-bundles#11`), bound the symbol `w` in lesson 02.
+A third commit, **`d11644a`** (`belay-bundles#11`), bound the symbol `w` in lesson 02.
 
 On 2026-09-13 this bundle carried the catalogue's last two confirmed toil sites. **Both charges
 come off. The confirmed-toil count for this bundle is now 0.**
@@ -786,7 +786,7 @@ All are served except the wrapping fragment above. Two checks specific to this r
 ### **Zero confirmed toil sites. The count was 2 on 2026-09-13 — the catalogue's last two — and both are closed.**
 
 Both were the same defect and both had the same repair: the bundle shipped nine files destined for
-the learner's workspace and declared no `supplies:` entry for any of them. `tutorail-bundles#6`
+the learner's workspace and declared no `supplies:` entry for any of them. `belay-bundles#6`
 declared both sets and deleted both instructions.
 
 ### Closed since 2026-09-13
@@ -878,7 +878,7 @@ now declared.
 
 ## 5. Proposals
 
-Each names a concrete action. All are proposals; applying any of them is the `tutorail-authoring`
+Each names a concrete action. All are proposals; applying any of them is the `belay-authoring`
 skill's job, not this one's. Nothing in the bundle was changed here.
 
 **The 2026-09-13 report's P1, P2 and P3 are closed and are not repeated.** P1 and P2 were applied
@@ -1076,7 +1076,7 @@ genuine strength and it should be said as plainly as the finding is.
 
 #### `w` — **the row comes back CLEAN. This is the negative test for the detector, and it passes.**
 
-`tutorail-bundles#11` (`d11644a`) is verified as a real fix, not a relabelling:
+`belay-bundles#11` (`d11644a`) is verified as a real fix, not a relabelling:
 
 - **The binding sentence exists, in a lesson, in prose the learner meets.**
   `lessons/02-first-shader-program.md:25–26`:
@@ -1138,7 +1138,7 @@ iterations" tells the learner what the technique *does* at the point of use.
 
 The sort in this section is the reader's, candidate by candidate, and the rubric says plainly that
 no rule of shape does it. A future `DESIGN.md` convention marking a conceptual parameter apart from
-a type would make it mechanical; that is a bundle-format question owned by `skomp/tutorAIl` and it
+a type would make it mechanical; that is a bundle-format question owned by `skomp/belay` and it
 is not settled here.
 
 ### 6.4 Does the lesson equip the tutor to end a turn with one concrete action?
@@ -1419,7 +1419,7 @@ exception — it introduces nothing it does not later use. The completability in
 gate is hiding in the manifest, and both supplied file sets sit on the main path where a learner
 who declines every offer still receives them.
 
-**`tutorail-bundles#6` closed the last confirmed toil in this bundle, and with it the catalogue's
+**`belay-bundles#6` closed the last confirmed toil in this bundle, and with it the catalogue's
 last two sites.** The course's entire recoverable loss on 2026-09-13 was 4 points across two
 file-copy instructions caused by one omission — the bundle declared no `supplies:` entries at all
 while shipping nine files destined for the learner's workspace. That omission is gone. **There is
@@ -1427,7 +1427,7 @@ no toil left here to propose a fix for**, and every remaining proposal in §5 is
 coverage repair (P2, P3, P4), a wording fix (P5, P7), a missing definition (P6), one closing-action
 repair (P1), or a question only the author can answer (Q1–Q4).
 
-**`tutorail-bundles#11` holds up under the detector that found it.** `w` is bound in a lesson, in
+**`belay-bundles#11` holds up under the detector that found it.** `w` is bound in a lesson, in
 prose the learner meets, in the same sentence as its first use, and all three finding buckets of
 the symbol scan come back empty. The one term this run adds — `thickness` at `17:45` — is milder
 and is the reader's find, not the scanner's.
