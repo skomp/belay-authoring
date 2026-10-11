@@ -85,7 +85,8 @@
 # PYTHON, AND READING THE OUTPUT
 # ---------------------------------------------------------------------------
 # The suite and the toolkit are stdlib-only, so there is nothing to install and
-# no lockfile to honour. 3.11 is chosen because it is what the code says it
+# no lockfile to honour. The one exception is the `pyyaml: present` leg of the
+# matrix, which installs a pinned PyYAML for the tests only - see the matrix. 3.11 is chosen because it is what the code says it
 # needs - `skills/belay-authoring/scripts/bundlelib.py` and the runner's
 # `validate_bundle.py` both document "Stdlib only. Python 3.11." - and it is
 # the version the work is done and verified on. (The suite also passes under
@@ -158,7 +159,7 @@ permissions:
 
 jobs:
   suite:
-    name: suite (${{ matrix.os }})
+    name: suite (${{ matrix.os }}${{ matrix.pyyaml == 'present' && ', with PyYAML' || '' }})
     runs-on: ${{ matrix.os }}
     strategy:
       # Never cancel the other platform. The whole point of the matrix is the
@@ -167,6 +168,13 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
+        # The toolkit is stdlib-only and must pass with PyYAML absent. But a
+        # suite that checks "a conforming parser reads this back" SKIPS that
+        # half when PyYAML is not importable, and says so in its notes. With
+        # only the absent leg, a green run proves nothing about a conforming
+        # parser (belay-authoring#26). The present leg is the one that runs
+        # those halves; the absent leg keeps its old job name.
+        pyyaml: [absent, present]
 
     steps:
       - name: Check out belay-authoring
@@ -192,6 +200,17 @@ jobs:
         uses: actions/setup-python@v7
         with:
           python-version: '3.11'
+
+      - name: Install PyYAML for the conforming-parser checks
+        if: matrix.pyyaml == 'present'
+        run: |
+          set -euo pipefail
+          # Pinned: bundlelib's retyped-scalar patterns are copied from this
+          # version's resolver, and test_emit_scalar.py fails if they drift.
+          python -m pip install --quiet 'PyYAML==6.0.2'
+          # Prove the leg is what its name says, so a failed install cannot
+          # turn it into a second absent leg.
+          python -c "import yaml; print('PyYAML', yaml.__version__)"
 
       - name: Install the pinned runner
         run: |
