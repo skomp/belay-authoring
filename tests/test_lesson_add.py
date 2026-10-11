@@ -414,7 +414,7 @@ def case_folder() -> None:
         # .exists()`, which asserts the PLATFORM and not the behaviour: True
         # where the filesystem folds case, False where it does not, so the
         # control failed on Linux - the platform the rest of this case exists
-        # to defend against (tutorail-authoring#17). What holds on both is
+        # to defend against (belay-authoring#17). What holds on both is
         # that exists() collides: where case is folded it cannot tell the
         # mis-cased body from a correct one, and where it is not it cannot
         # tell the mis-cased body from no body at all. listing() separates
@@ -959,7 +959,7 @@ def case_validator_failure_discards() -> None:
             "discarded",
             "--title",
             "Discarded",
-            env={"TUTORAIL_VALIDATOR": str(stub)},
+            env={"BELAY_VALIDATOR": str(stub)},
         )
         check(result.returncode != 0, "validator failure: exits non-zero")
         check_in(
@@ -1744,7 +1744,7 @@ def case_optional_validator_failure_discards() -> None:
             OFFER_AT,
             "--offer-because",
             BECAUSE,
-            env={"TUTORAIL_VALIDATOR": str(stub)},
+            env={"BELAY_VALIDATOR": str(stub)},
         )
         check(result.returncode != 0, "optional discard: exits non-zero")
         check(

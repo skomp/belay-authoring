@@ -1,6 +1,6 @@
 ---
 name: course-quality
-description: Evaluate the quality of a bundle, score a course, does this tutorial teach, audit a course, find the toil in a course, review a tutorial against its learning goals. Scores a tutorAIl bundle lesson by lesson against a teaching rubric - what teaches, what is practice, what is only evidence, and what is toil the bundle should hand over instead of assigning - and reports the objectives and DESIGN.md anchors no lesson exercises. Use this when someone asks how good a course is, whether a tutorial actually teaches, where its busywork is, or whether it covers what it claims. It proposes and never changes a bundle; applying a proposal goes back through the tutorail-authoring skill and its toolkit.
+description: Evaluate the quality of a bundle, score a course, does this tutorial teach, audit a course, find the toil in a course, review a tutorial against its learning goals. Scores a Belay bundle lesson by lesson against a teaching rubric - what teaches, what is practice, what is only evidence, and what is toil the bundle should hand over instead of assigning - and reports the objectives and DESIGN.md anchors no lesson exercises. Use this when someone asks how good a course is, whether a tutorial actually teaches, where its busywork is, or whether it covers what it claims. It proposes and never changes a bundle; applying a proposal goes back through the belay-authoring skill and its toolkit.
 ---
 
 # Course quality
@@ -14,7 +14,7 @@ because the parts of this that a script can decide are not the parts that matter
 ## Three rules about this skill itself
 
 **It proposes and never changes a bundle.** Every finding leaves this skill as a proposal
-the author can accept or reject. Applying one goes back through the `tutorail-authoring`
+the author can accept or reject. Applying one goes back through the `belay-authoring`
 skill and its toolkit, after the author says yes. An audit that quietly repaired the thing
 it was measuring would have destroyed the measurement and the author's ownership of the
 course in one move.
@@ -44,7 +44,7 @@ Do not change a file at any point in that sequence.
 
 `scripts/audit.py` ships with this skill, in this skill's own `scripts/` directory, and
 the paths below are relative to it. It is stdlib-only Python 3, and it reaches across to
-the `tutorail-authoring` skill's `scripts/bundlelib.py` for bundle loading, so both skills
+the `belay-authoring` skill's `scripts/bundlelib.py` for bundle loading, so both skills
 must be installed — they ship in one plugin, so they are. If the command is not found,
 the working directory is somewhere else: locate `audit.py` inside the installed plugin and
 use that path. Do not reimplement what it does because you could not find it.
@@ -272,7 +272,7 @@ if the result has to come off the network, out of a package registry or from an 
 learner holds, there is no supplies entry to write and nothing to propose. Say that
 plainly instead, and leave the step scored as the learner's setup.
 
-`supplies.py` belongs to the `tutorail-authoring` toolkit, not to this skill, so that
+`supplies.py` belongs to the `belay-authoring` toolkit, not to this skill, so that
 path is relative to **that** skill's directory and running it is that skill's job. Quote
 the command with `--check` so the author sees the plan before anything changes, and name the
 lines of prose that come out of the lesson once the files are declared. A toil span
@@ -293,7 +293,7 @@ beside the score, and a question. The gate may well be correct. The score stands
 
 ## When something is wrong
 
-- **The author asks you to apply a proposal** — that is the `tutorail-authoring` skill's
+- **The author asks you to apply a proposal** — that is the `belay-authoring` skill's
   work, not this one's. Hand the proposal over; do not change the bundle here.
 - **`audit.py` fails to load the bundle** — put its message in front of the author. A
   bundle the loader rejects is usually a bundle the validator also rejects, and repairing

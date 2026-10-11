@@ -122,10 +122,10 @@ from fnmatch import fnmatch
 from pathlib import Path
 
 # dryrun.py lives in the course-quality skill; bundlelib.py belongs to
-# tutorail-authoring. Reach across to it the way audit.py already does,
+# belay-authoring. Reach across to it the way audit.py already does,
 # rather than duplicating manifest parsing and lesson discovery here.
 _SCRIPTS_DIR = Path(__file__).resolve().parent
-_AUTHORING_SCRIPTS = _SCRIPTS_DIR.parents[1] / "tutorail-authoring" / "scripts"
+_AUTHORING_SCRIPTS = _SCRIPTS_DIR.parents[1] / "belay-authoring" / "scripts"
 
 try:
     import bundlelib as bl
@@ -1031,8 +1031,8 @@ def apply_seed(seed: Path, instance: Path) -> list[str]:
 # one changes what the suite exercises.
 # --------------------------------------------------------------------------
 
-TUTOR_PROMPT_OPENING = "You are the tutor in a dry run of a tutorAIl course."
-LEARNER_PROMPT_OPENING = "You are the learner in a dry run of a tutorAIl course."
+TUTOR_PROMPT_OPENING = "You are the tutor in a dry run of a Belay course."
+LEARNER_PROMPT_OPENING = "You are the learner in a dry run of a Belay course."
 
 TUTOR_PROMPT = """{opening}
 
@@ -1309,7 +1309,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="dryrun.py",
         description=(
-            "Walk a tutorAIl course one task at a time with an agent playing "
+            "Walk a Belay course one task at a time with an agent playing "
             "the learner. The learner works in a mirror that never holds the "
             "course, and the guard that proves it aborts the run rather than "
             "warning."

@@ -1,6 +1,6 @@
-# tutorail-authoring
+# belay-authoring
 
-Interview-driven authoring and maintenance for [tutorAIl](https://github.com/skomp/tutorAIl)
+Interview-driven authoring and maintenance for [Belay](https://github.com/skomp/belay)
 tutorial bundles.
 
 You describe the course you want to teach. The skill asks until it knows enough, writes a
@@ -25,34 +25,34 @@ document beats revising twenty lesson files.
 
 ## Requires the runner
 
-This plugin **depends on the tutorAIl runner being installed**, because the toolkit invokes
+This plugin **depends on the Belay runner being installed**, because the toolkit invokes
 its validator rather than shipping a second, weaker copy. Install that first, by the route
 that matches your host:
 
 ```
-/plugin marketplace add skomp/tutorAIl
-/plugin install tutorail@tutorail
+/plugin marketplace add skomp/belay
+/plugin install belay@belay
 ```
 
 On Codex, install the runner the way its own README describes — a symlink into
-`~/.agents/skills/tutorail`. The toolkit searches `~/.agents/skills/tutorail/scripts/` before
+`~/.agents/skills/belay`. The toolkit searches `~/.agents/skills/belay/scripts/` before
 it searches the Claude Code plugin directories, so that install is what makes the validator
-findable there. `$TUTORAIL_VALIDATOR` overrides the search on either host.
+findable there. `$BELAY_VALIDATOR` overrides the search on either host.
 
 ## Install
 
 **Claude Code**
 
 ```
-/plugin marketplace add skomp/tutorail-authoring
-/plugin install tutorail-authoring@tutorail-authoring
+/plugin marketplace add skomp/belay-authoring
+/plugin install belay-authoring@belay-authoring
 ```
 
 Update it with both commands:
 
 ```
-claude plugin marketplace update tutorail-authoring
-claude plugin update tutorail-authoring@tutorail-authoring
+claude plugin marketplace update belay-authoring
+claude plugin update belay-authoring@belay-authoring
 ```
 
 The second alone compares manifest **versions**, not commits, and will report that you are
@@ -68,13 +68,13 @@ Codex follows symlinks in `~/.agents/skills/`, its documented user skills scope.
 somewhere you do not work in:
 
 ```
-git clone git@github.com:skomp/tutorail-authoring.git ~/.local/share/tutorail-authoring
+git clone git@github.com:skomp/belay-authoring.git ~/.local/share/belay-authoring
 mkdir -p ~/.agents/skills
-ln -s ~/.local/share/tutorail-authoring/skills/tutorail-authoring ~/.agents/skills/tutorail-authoring
-ln -s ~/.local/share/tutorail-authoring/skills/course-quality ~/.agents/skills/course-quality
+ln -s ~/.local/share/belay-authoring/skills/belay-authoring ~/.agents/skills/belay-authoring
+ln -s ~/.local/share/belay-authoring/skills/course-quality ~/.agents/skills/course-quality
 ```
 
-Update it with `git -C ~/.local/share/tutorail-authoring pull`.
+Update it with `git -C ~/.local/share/belay-authoring pull`.
 
 Both symlinks. This plugin ships two skills, and this install path never reads a manifest,
 so a missing symlink is a missing skill with nothing to warn you.
@@ -87,7 +87,7 @@ path does not work yet. It fails silently on both plugins, for the same reasons.
 Point the same two symlinks at the checkout you work in:
 
 ```
-ln -s <your checkout>/skills/tutorail-authoring ~/.agents/skills/tutorail-authoring
+ln -s <your checkout>/skills/belay-authoring ~/.agents/skills/belay-authoring
 ln -s <your checkout>/skills/course-quality ~/.agents/skills/course-quality
 ```
 
@@ -177,8 +177,8 @@ be editing. Copy the whole scripts directory — `validate_bundle.py` imports `y
 it fails in a way that reads as product defects:
 
 ```
-mkdir -p /tmp/pin && cp <tutorAIl>/skills/tutorail/scripts/*.py /tmp/pin/
-TUTORAIL_VALIDATOR=/tmp/pin/validate_bundle.py python3 tests/run_all.py
+mkdir -p /tmp/pin && cp <belay>/skills/belay/scripts/*.py /tmp/pin/
+BELAY_VALIDATOR=/tmp/pin/validate_bundle.py python3 tests/run_all.py
 ```
 
 Every suite prints the validator it used, so the pin is visible rather than assumed.
@@ -188,9 +188,9 @@ Every suite prints the validator it used, so the pin is visible rather than assu
 `.github/workflows/tests.yml` runs the whole suite on `ubuntu-latest` and `macos-latest` for
 every push and pull request. The Linux job is the one that earns it: `ubuntu-latest` has a
 case-sensitive filesystem, and an assertion that encodes the developer's filesystem reads as
-correct on every macOS machine (tutorail-authoring#17).
+correct on every macOS machine (belay-authoring#17).
 
-The workflow checks out `skomp/tutorAIl` **at a commit sha**, not at `main`, so that a red
+The workflow checks out `skomp/belay` **at a commit sha**, not at `main`, so that a red
 suite always means a defect in this repository and never an upstream change. The cost is that
 somebody must bump the pin by hand. **The sha lives in one place — the `ref:` in that
 workflow — and the file's own header comment holds the bump procedure and the reasoning.**

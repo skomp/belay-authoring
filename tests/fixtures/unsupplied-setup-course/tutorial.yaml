@@ -3,7 +3,7 @@ id: unsupplied-setup-course
 title: A Fixture Course That Assigns Its Own Setup
 description: >
   A minimal course reproducing the shape a learner hit in
-  skomp/tutorail-bundles#3: the first lesson tells the learner to create the
+  skomp/belay-bundles#3: the first lesson tells the learner to create the
   project, the bundle declares no supplies entry, and no hand-over to the
   tutor is declared anywhere.
 subjects: [fixtures, testing]

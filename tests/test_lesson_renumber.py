@@ -597,7 +597,7 @@ def main() -> int:
         validator, how = bl.find_validator()
         print(f"  runner:  {validator}  ({how})")
     except bl.ToolError:
-        print("  runner:  NOT FOUND - this suite needs the tutorAIl runner installed")
+        print("  runner:  NOT FOUND - this suite needs the Belay runner installed")
         return 2
     print()
 

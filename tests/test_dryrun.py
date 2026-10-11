@@ -69,7 +69,7 @@ from harness import (  # noqa: E402
 
 # dryrun.py is loaded BY PATH, not by putting its directory on sys.path.
 # harness.py says at length why course-quality's scripts directory must not
-# join tutorail-authoring's on one path, and that reasoning does not stop
+# join belay-authoring's on one path, and that reasoning does not stop
 # being true because this suite would find an import statement convenient.
 # The module still resolves `bundlelib` normally, because harness.py has
 # already put the authoring scripts on the path.

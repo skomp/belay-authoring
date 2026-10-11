@@ -44,12 +44,12 @@ Three audits, in this order:
 
 | # | Course | Path | Total |
 |---|---|---|---|
-| 1 | `webgl-typescript-scene` (catalogue version) | `../tutorail-bundles/webgl-typescript-scene` | **194** |
+| 1 | `webgl-typescript-scene` (catalogue version) | `../belay-bundles/webgl-typescript-scene` | **194** |
 | 2 | `webgl-typescript-scene` (regenerated candidate) | `…/scratchpad/wz/webgl-typescript-scene` | **193** |
-| 3 | `durable-event-broker` | `../tutorail-bundles/durable-event-broker` | **211** (main path alone: **170**) |
+| 3 | `durable-event-broker` | `../belay-bundles/durable-event-broker` | **211** (main path alone: **170**) |
 
 **No bundle was changed.** Every finding below is a proposal. Applying one goes back
-through the `tutorail-authoring` skill and its toolkit, after the owner says yes.
+through the `belay-authoring` skill and its toolkit, after the owner says yes.
 Section 8 reports what this exercise revealed about the tooling, which the plan says is
 the most valuable thing this task produces. If you read one section, read that one.
 
@@ -406,30 +406,30 @@ place `starter/README.md` into the learner's workspace root, where it is not lis
 material read at `00-project-setup/LESSON.md:38`.
 
 ```
-python3 scripts/supplies.py add ../tutorail-bundles/webgl-typescript-scene \
+python3 scripts/supplies.py add ../belay-bundles/webgl-typescript-scene \
   --from lessons/00-project-setup/starter/package.json \
   --to package.json \
   --describe "the npm manifest and its scripts for the graphics workspace" --check
-python3 scripts/supplies.py add ../tutorail-bundles/webgl-typescript-scene \
+python3 scripts/supplies.py add ../belay-bundles/webgl-typescript-scene \
   --from lessons/00-project-setup/starter/package-lock.json \
   --to package-lock.json \
   --describe "the pinned dependency lockfile" --check
-python3 scripts/supplies.py add ../tutorail-bundles/webgl-typescript-scene \
+python3 scripts/supplies.py add ../belay-bundles/webgl-typescript-scene \
   --from lessons/00-project-setup/starter/tsconfig.json \
   --to tsconfig.json \
   --describe "the strict TypeScript configuration used by npm run typecheck" --check
-python3 scripts/supplies.py add ../tutorail-bundles/webgl-typescript-scene \
+python3 scripts/supplies.py add ../belay-bundles/webgl-typescript-scene \
   --from lessons/00-project-setup/starter/index.html \
   --to index.html \
   --describe "the plain HTML page that hosts the canvas and the bundled entry point" --check
-python3 scripts/supplies.py add ../tutorail-bundles/webgl-typescript-scene \
+python3 scripts/supplies.py add ../belay-bundles/webgl-typescript-scene \
   --from lessons/00-project-setup/starter/src/main.ts \
   --to src/main.ts \
   --describe "the starter TypeScript entry point" --check
 ```
 
 `--from` is bundle-relative; `--to` is workspace-relative. Run with `--check` first — this
-is the `tutorail-authoring` toolkit's job, not this skill's, and the paths above are
+is the `belay-authoring` toolkit's job, not this skill's, and the paths above are
 relative to that skill's directory.
 
 **Prose to delete once the entries exist:** `lessons/00-project-setup/LESSON.md:34`–`:36`
@@ -443,7 +443,7 @@ learner would be left without the files.
 re-home objective 5.** These files belong to lesson 13 and should appear when it opens.
 
 ```
-python3 scripts/supplies.py add ../tutorail-bundles/webgl-typescript-scene \
+python3 scripts/supplies.py add ../belay-bundles/webgl-typescript-scene \
   --from lessons/13-load-gltf-model/model/ \
   --to models \
   --describe "Duck.glb and its licence and attribution files, which travel together" \
@@ -566,7 +566,7 @@ a learner who skips it. P4 would make the manifest say so.
 # AUDIT 2 — `webgl-typescript-scene`, the regenerated candidate
 
 Unpacked at
-`/private/tmp/claude-501/-Users-robert-src-github-com-skomp-tutorail-authoring/89d87f4d-f904-4106-9206-17ba8542c620/scratchpad/wz/webgl-typescript-scene`.
+`/private/tmp/claude-501/-Users-robert-src-github-com-skomp-belay-authoring/89d87f4d-f904-4106-9206-17ba8542c620/scratchpad/wz/webgl-typescript-scene`.
 Read-only; nothing there was modified.
 
 **What actually differs.** I diffed the trees rather than trusting the summary. The
@@ -1511,5 +1511,5 @@ course with a different house style and think it means something.
 | — | regenerated webgl | Adopt the lesson structure; restore `ownership_policy`; use `supplies:`; restore `npm run serve` | Verdict, audit 2 §5 |
 | T1–T8 | the tooling | Eight findings against `audit.py`, the rubric and the skill | Section 8 |
 
-Nothing above has been applied. Applying any of it is the `tutorail-authoring` skill's work,
+Nothing above has been applied. Applying any of it is the `belay-authoring` skill's work,
 after you say yes.

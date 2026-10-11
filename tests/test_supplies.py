@@ -605,7 +605,7 @@ def cli_case_lesson_optional() -> None:
     hand is now proven by a real bundle and a real subprocess run.
 
     `tests/fixtures/durable-event-broker-mini` is a trimmed copy of
-    `durable-event-broker` (tutorail-bundles), the bundle named in the
+    `durable-event-broker` (belay-bundles), the bundle named in the
     finding: two lessons on the main path, and `lessons/tcp-transport.md`
     declared only in `optional_lessons`, with `optional: true` in its own
     frontmatter, exactly like the original.

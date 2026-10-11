@@ -1,7 +1,7 @@
 # Teaching the Toolkit About Optional Lessons — Design
 
 **Date:** 2026-09-12
-**Issue:** skomp/tutorail-authoring#1
+**Issue:** skomp/belay-authoring#1
 **Status:** approved
 
 ---
@@ -118,7 +118,7 @@ agent. Without `--confirm` and without `--check`, `promote.py --optional` prints
 derived values and **exits 2**, writing nothing — the non-zero exit is the confirmation
 gate, not a failure, and it is non-zero precisely because exit 0 would read to an agent as
 "done". `--confirm` is meaningless without `--optional` and is refused there. The same
-contract is stated for callers in `skills/tutorail-authoring/SKILL.md`.
+contract is stated for callers in `skills/belay-authoring/SKILL.md`.
 
 Deriving judgement from data is normally the wrong move. It is right here because the
 provenance is the best evidence anyone will ever have about when the lesson is needed: a real

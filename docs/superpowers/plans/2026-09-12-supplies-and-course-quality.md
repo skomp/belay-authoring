@@ -22,17 +22,17 @@ project's own restricted loader `yamlite.py` and written as text.
 
 ## Global Constraints
 
-- **Two repositories.** Part A is `~/src/github.com/skomp/tutorAIl` (the runner). Part B is
-  `~/src/github.com/skomp/tutorail-authoring` (this one). Part A lands first: it is the
+- **Two repositories.** Part A is `~/src/github.com/skomp/belay` (the runner). Part B is
+  `~/src/github.com/skomp/belay-authoring` (this one). Part A lands first: it is the
   contract Part B cites.
 - **Part A happens in a git WORKTREE, branched from `origin/main` at `1697874`.** A live
-  session works in that checkout, and `~/.agents/skills/tutorail` is a **symlink into its
+  session works in that checkout, and `~/.agents/skills/belay` is a **symlink into its
   working tree** — anything written there changes what a running session loads, mid-edit.
   Everything is pushed, so branching from the remote loses nothing. The branch is handed
   back for that session to review and merge; do not merge it yourself.
   ```bash
-  git -C ~/src/github.com/skomp/tutorAIl fetch origin
-  git -C ~/src/github.com/skomp/tutorAIl worktree add -b supplies ../tutorAIl-supplies origin/main
+  git -C ~/src/github.com/skomp/belay fetch origin
+  git -C ~/src/github.com/skomp/belay worktree add -b supplies ../belay-supplies origin/main
   ```
   That session is concurrently committing to `docs/superpowers/specs/2026-09-11-tutorial-runner-design.md`
   and `TODO.md` on main. Those two paths are **theirs**; every path this plan names is
@@ -66,8 +66,8 @@ project's own restricted loader `yamlite.py` and written as text.
   that has never been shown reporting the opposite has not been tested. A new check that
   cannot be shown firing is not done.
 - **Pin the validator when a result has to mean something.** This repository's suites run
-  the runner's live validator through `~/.agents/skills/tutorail`, which is a **symlink**
-  into the tutorAIl checkout that Part A edits. Export `TUTORAIL_VALIDATOR` at a pinned
+  the runner's live validator through `~/.agents/skills/belay`, which is a **symlink**
+  into the Belay checkout that Part A edits. Export `BELAY_VALIDATOR` at a pinned
   copy for any run quoted as verification:
   **Pin the whole scripts directory, not the one file.** `validate_bundle.py` imports
   `yamlite` and `catalogs` from beside itself, so a single-file pin produces a validator
@@ -77,8 +77,8 @@ project's own restricted loader `yamlite.py` and written as text.
 
   ```bash
   mkdir -p /tmp/pin
-  cp ~/src/github.com/skomp/tutorAIl-supplies/skills/tutorail/scripts/*.py /tmp/pin/
-  TUTORAIL_VALIDATOR=/tmp/pin/validate_bundle.py python3 tests/run_all.py
+  cp ~/src/github.com/skomp/belay-supplies/skills/belay/scripts/*.py /tmp/pin/
+  BELAY_VALIDATOR=/tmp/pin/validate_bundle.py python3 tests/run_all.py
   ```
 - **Tickets and issue text use ASD-STE100 Simplified Technical English.** Code comments,
   commit messages and reference documents keep their normal voice.
@@ -90,12 +90,12 @@ project's own restricted loader `yamlite.py` and written as text.
 
 ## Already measured — do not re-derive
 
-Taken on this machine 2026-09-12, tutorAIl at `1697874`, tutorail-authoring at `310e37f`,
-tutorail-bundles at `76dcdce` or later.
+Taken on this machine 2026-09-12, Belay at `1697874`, belay-authoring at `310e37f`,
+belay-bundles at `76dcdce` or later.
 
 | Fact | Evidence |
 |---|---|
-| `yamlite.load_yaml` **does** parse a block sequence of mappings, and a double-quoted scalar containing `:` | ran against `/Users/robert/.agents/skills/tutorail/scripts/yamlite.py`; `supplies` came back as a `list` of `dict` with `describe` = `Duck.glb: the sample model` |
+| `yamlite.load_yaml` **does** parse a block sequence of mappings, and a double-quoted scalar containing `:` | ran against `/Users/robert/.agents/skills/belay/scripts/yamlite.py`; `supplies` came back as a `list` of `dict` with `describe` = `Duck.glb: the sample model` |
 | The validator rejects neither unknown manifest keys nor unknown lesson frontmatter keys. Only `catalog.yaml` gets an unknown-key check | `validate_bundle.py:2478` is the only one |
 | `CHECKS` runs 1–21; `BUNDLE_ONLY = {12, 13}`, `INSTANCE_ONLY = {11, 14, 15, 17, 21}`. **22 is free** | `validate_bundle.py:77`–`:106` |
 | `tests/test_validate_bundle.py` ends in a **meta-test that fails when any check in `CHECKS` has no fixture that makes it fire**. Adding check 22 without a mutator turns the suite red | `tests/test_validate_bundle.py:2470` |
@@ -104,14 +104,14 @@ tutorail-bundles at `76dcdce` or later.
 | Check 6 (`check_material_reachable`) walks every file in a lesson **folder** and requires `names_file(LESSON.md text, folder-relative path)`; it matches the folder-relative path or the bare basename as a delimited token | `validate_bundle.py:1081`, `:1115` |
 | Lesson body sections are normative: Purpose, Prerequisites, Learning objectives, Theory, Concepts to teach, Constraints, Suggested progression, Completion conditions, On completion persist, Optional deeper paths | `bundle-format.md:609`–`:662` |
 | `COURSE.md` SHOULD carry a **coverage list**: a heading naming what it is, then one topic per line. It is the only part of `COURSE.md` the tutor reads mechanically, and topics are named as a learner would ask, not as lessons are titled | `bundle-format.md:390`–`:445` |
-| A lesson in `lessons/` is listed in `lessons` **or** in `optional_lessons` — "exactly once in `lessons`" is no longer true | `bundle-format.md` sections 2, 6, 12, 13, from tutorAIl `9dbbcd4` |
+| A lesson in `lessons/` is listed in `lessons` **or** in `optional_lessons` — "exactly once in `lessons`" is no longer true | `bundle-format.md` sections 2, 6, 12, 13, from Belay `9dbbcd4` |
 | `failure_modes` is a second additive key: stable id → `summary`, `signals` | `bundle-format.md:304` |
-| `bundlelib` gives Part B: `find_validator()`, `load_bundle(root)`, `require_clean_tree(root, force)`, `Staged(root, check_only=)` with `stage.root` and `stage.commit() -> ValidatorRun`, `read_text`, `atomic_write_text`, `split_frontmatter`, `frontmatter_span`, `set_frontmatter_field` (**scalars only**), `replace_lessons_list`, `ToolError`, `run_main` | `skills/tutorail-authoring/scripts/bundlelib.py` |
+| `bundlelib` gives Part B: `find_validator()`, `load_bundle(root)`, `require_clean_tree(root, force)`, `Staged(root, check_only=)` with `stage.root` and `stage.commit() -> ValidatorRun`, `read_text`, `atomic_write_text`, `split_frontmatter`, `frontmatter_span`, `set_frontmatter_field` (**scalars only**), `replace_lessons_list`, `ToolError`, `run_main` | `skills/belay-authoring/scripts/bundlelib.py` |
 | The authoring harness gives: `Workspace`, `case`, `check`, `check_in`, `check_not_in`, `run(script, *args)` → `.output`, `tree_digest`, `listing`, `has_exactly`, `git_init`, `write_stub_validator`, `no_runner_env`, `report` | `tests/harness.py` |
-| `TUTORAIL_VALIDATOR` is the env var the validator search consults first | `tests/harness.py:no_runner_env` |
+| `BELAY_VALIDATOR` is the env var the validator search consults first | `tests/harness.py:no_runner_env` |
 | The webgl bundle's toil is exactly two sites | `lessons/00-project-setup/LESSON.md:34`, `lessons/13-load-gltf-model/LESSON.md:40` |
 | **The negative control for the toil scanner already exists in the corpus**: `webgl-typescript-scene/lessons/15-render-to-texture.md:41` reads "Provide a direct-copy composition shader before adding effects." A scanner that fires on the word `copy` fires here, and it must not | grep over the bundle |
-| `durable-event-broker` in `tutorail-bundles` is the first real bundle using `optional_lessons` | reported by a peer session, 2026-09-12 |
+| `durable-event-broker` in `belay-bundles` is the first real bundle using `optional_lessons` | reported by a peer session, 2026-09-12 |
 | **Runner suite baseline at `1697874`: `tests/test_validate_bundle.py` = 252 assertions, `tests/test_catalogs.py` = 158. Both green.** Check 22 and the check 6 fix must leave both green | measured by the session working in that repository, 2026-09-12 |
 | The runner has **three** manifests to keep in step, all at `0.3.0`: `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`. `claude plugin validate .` checks their consistency | same source |
 | **An install compares the manifest VERSION, not the content.** `claude plugin update` reported `0.1.0` as "already at the latest version" while the installed copy was missing a whole feature. A `supplies:` that ships without a bump reaches no installed copy | same source, observed today |
@@ -119,12 +119,12 @@ tutorail-bundles at `76dcdce` or later.
 
 ---
 
-# Part A — the runner (`~/src/github.com/skomp/tutorAIl`)
+# Part A — the runner (`~/src/github.com/skomp/belay`)
 
 ### Task A1: check 22 — `supplies` entries are well-formed
 
 **Files:**
-- Modify: `skills/tutorail/scripts/validate_bundle.py` (`CHECKS` at `:77`, new functions, wiring in `validate()` at `:2250`)
+- Modify: `skills/belay/scripts/validate_bundle.py` (`CHECKS` at `:77`, new functions, wiring in `validate()` at `:2250`)
 - Test: `tests/test_validate_bundle.py` (mutators beside the others, entries in `CASES`)
 
 **Interfaces:**
@@ -246,7 +246,7 @@ def m_supplies_in_an_unlisted_lesson(root: Path) -> None:
 - [ ] **Step 2: Run them and watch every one fail**
 
 ```bash
-cd ~/src/github.com/skomp/tutorAIl && python3 tests/test_validate_bundle.py
+cd ~/src/github.com/skomp/belay && python3 tests/test_validate_bundle.py
 ```
 
 Expected: the seven new cases fail because check 22 does not exist, **and** the meta-test
@@ -302,7 +302,7 @@ call `resolve_exact` against the bundle root for a `to`, which would be meaningl
 - [ ] **Step 4: Run the tests and watch them pass**
 
 ```bash
-cd ~/src/github.com/skomp/tutorAIl && python3 tests/test_validate_bundle.py
+cd ~/src/github.com/skomp/belay && python3 tests/test_validate_bundle.py
 ```
 
 Expected: PASS, including the meta-test.
@@ -316,8 +316,8 @@ seven cases above is consistent with a check that always fires.
 - [ ] **Step 6: Commit**
 
 ```bash
-cd ~/src/github.com/skomp/tutorAIl
-git add skills/tutorail/scripts/validate_bundle.py tests/test_validate_bundle.py
+cd ~/src/github.com/skomp/belay
+git add skills/belay/scripts/validate_bundle.py tests/test_validate_bundle.py
 git commit -m "Add check 22: supplies entries are well-formed"
 ```
 
@@ -326,7 +326,7 @@ git commit -m "Add check 22: supplies entries are well-formed"
 ### Task A2: check 6 must not fire on supplied material
 
 **Files:**
-- Modify: `skills/tutorail/scripts/validate_bundle.py:1115` (`check_material_reachable`)
+- Modify: `skills/belay/scripts/validate_bundle.py:1115` (`check_material_reachable`)
 - Test: `tests/test_validate_bundle.py`
 
 **Interfaces:**
@@ -402,7 +402,7 @@ cleared a file:
 - [ ] **Step 4: Run the tests and watch them pass**
 
 ```bash
-cd ~/src/github.com/skomp/tutorAIl && python3 tests/test_validate_bundle.py
+cd ~/src/github.com/skomp/belay && python3 tests/test_validate_bundle.py
 ```
 
 Expected: PASS. The `stray.txt` finding is still there; `Duck.glb` is gone.
@@ -410,7 +410,7 @@ Expected: PASS. The `stray.txt` finding is still there; `Duck.glb` is gone.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add skills/tutorail/scripts/validate_bundle.py tests/test_validate_bundle.py
+git add skills/belay/scripts/validate_bundle.py tests/test_validate_bundle.py
 git commit -m "Stop check 6 firing on material a lesson supplies"
 ```
 
@@ -419,7 +419,7 @@ git commit -m "Stop check 6 firing on material a lesson supplies"
 ### Task A3: the format contract
 
 **Files:**
-- Modify: `skills/tutorail/references/bundle-format.md` — a new section after section 2's
+- Modify: `skills/belay/references/bundle-format.md` — a new section after section 2's
   `failure_modes` subsection, a row in the field reference at `:129`, a paragraph in the
   ownership material, and an item in section 10's self-check at `:918`
 
@@ -476,7 +476,7 @@ reconciled later by a reader who trusts whichever they open first.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add skills/tutorail/references/bundle-format.md
+git add skills/belay/references/bundle-format.md
 git commit -m "Define supplies: the files a bundle hands the learner"
 ```
 
@@ -485,9 +485,9 @@ git commit -m "Define supplies: the files a bundle hands the learner"
 ### Task A4: the runner's behaviour
 
 **Files:**
-- Modify: `skills/tutorail/references/state-lifecycle.md` (section 3, `:101`–`:160`)
-- Modify: `skills/tutorail/references/runner-protocol.md`
-- Modify: `skills/tutorail/SKILL.md`, `README.md`, `.claude-plugin/plugin.json`,
+- Modify: `skills/belay/references/state-lifecycle.md` (section 3, `:101`–`:160`)
+- Modify: `skills/belay/references/runner-protocol.md`
+- Modify: `skills/belay/SKILL.md`, `README.md`, `.claude-plugin/plugin.json`,
   `.codex-plugin/plugin.json`
 
 - [ ] **Step 1: `state-lifecycle.md` section 3 gains step 8**
@@ -540,7 +540,7 @@ places and is changed in two is the failure this step exists to avoid.
 - [ ] **Step 5: Run the full runner suite**
 
 ```bash
-cd ~/src/github.com/skomp/tutorAIl && python3 tests/test_validate_bundle.py && python3 tests/test_catalogs.py
+cd ~/src/github.com/skomp/belay && python3 tests/test_validate_bundle.py && python3 tests/test_catalogs.py
 ```
 
 Expected: both PASS, at **252 and 158 assertions** — the baseline measured at `1697874`.
@@ -549,20 +549,20 @@ A lower count means a case stopped running, which a green line will not tell you
 - [ ] **Step 6: Commit**
 
 ```bash
-git add skills/tutorail/references/state-lifecycle.md skills/tutorail/references/runner-protocol.md \
-        skills/tutorail/SKILL.md README.md \
+git add skills/belay/references/state-lifecycle.md skills/belay/references/runner-protocol.md \
+        skills/belay/SKILL.md README.md \
         .claude-plugin/plugin.json .claude-plugin/marketplace.json .codex-plugin/plugin.json
 git commit -m "Place declared supplies instead of assigning them"
 ```
 
 ---
 
-# Part B — authoring and quality (`~/src/github.com/skomp/tutorail-authoring`)
+# Part B — authoring and quality (`~/src/github.com/skomp/belay-authoring`)
 
 ### Task B1: bundlelib writes a supplies entry
 
 **Files:**
-- Modify: `skills/tutorail-authoring/scripts/bundlelib.py`
+- Modify: `skills/belay-authoring/scripts/bundlelib.py`
 - Test: `tests/test_supplies.py` (new; the unit half)
 
 **Interfaces:**
@@ -622,7 +622,7 @@ def test_add_supplies_in_frontmatter_leaves_the_body_alone() -> None:
 - [ ] **Step 2: Run and watch them fail**
 
 ```bash
-cd ~/src/github.com/skomp/tutorail-authoring && python3 tests/test_supplies.py
+cd ~/src/github.com/skomp/belay-authoring && python3 tests/test_supplies.py
 ```
 
 Expected: `AttributeError: module 'bundlelib' has no attribute 'emit_scalar'`.
@@ -656,7 +656,7 @@ honest proof that the emitter and the loader agree, and it costs one parse.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add skills/tutorail-authoring/scripts/bundlelib.py tests/test_supplies.py
+git add skills/belay-authoring/scripts/bundlelib.py tests/test_supplies.py
 git commit -m "Teach bundlelib to write a supplies entry"
 ```
 
@@ -665,7 +665,7 @@ git commit -m "Teach bundlelib to write a supplies entry"
 ### Task B2: `supplies.py list` and `supplies.py add`
 
 **Files:**
-- Create: `skills/tutorail-authoring/scripts/supplies.py`
+- Create: `skills/belay-authoring/scripts/supplies.py`
 - Modify: `tests/test_supplies.py`, `tests/harness.py` (add `SUPPLIES = SCRIPTS / "supplies.py"`)
 - Modify: `tests/run_all.py` (register the suite)
 
@@ -745,14 +745,14 @@ add: supplies entry (manifest scope, placed after materialization)
 - [ ] **Step 4: Run and watch them pass, against a PINNED validator**
 
 Pin at **Part A's worktree**, not at the runner's `main` — main does not have check 22
-until the branch is merged, and `~/.agents/skills/tutorail` resolves to main through a
+until the branch is merged, and `~/.agents/skills/belay` resolves to main through a
 symlink.
 
 ```bash
 mkdir -p /tmp/pin
-cp ~/src/github.com/skomp/tutorAIl-supplies/skills/tutorail/scripts/*.py /tmp/pin/
-cd ~/src/github.com/skomp/tutorail-authoring
-TUTORAIL_VALIDATOR=/tmp/pin/validate_bundle.py python3 tests/test_supplies.py
+cp ~/src/github.com/skomp/belay-supplies/skills/belay/scripts/*.py /tmp/pin/
+cd ~/src/github.com/skomp/belay-authoring
+BELAY_VALIDATOR=/tmp/pin/validate_bundle.py python3 tests/test_supplies.py
 ```
 
 Copy the whole directory. `validate_bundle.py` imports `yamlite` and `catalogs` from beside
@@ -765,7 +765,7 @@ whose validator you cannot name is a run that proves nothing.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add skills/tutorail-authoring/scripts/supplies.py tests/test_supplies.py tests/harness.py tests/run_all.py
+git add skills/belay-authoring/scripts/supplies.py tests/test_supplies.py tests/harness.py tests/run_all.py
 git commit -m "Add supplies.py: declare the files a bundle hands the learner"
 ```
 
@@ -774,10 +774,10 @@ git commit -m "Add supplies.py: declare the files a bundle hands the learner"
 ### Task B3: the anti-toil rules
 
 **Files:**
-- Modify: `skills/tutorail-authoring/SKILL.md`
-- Modify: `skills/tutorail-authoring/references/interview-create.md`
-- Modify: `skills/tutorail-authoring/references/interview-modify.md`
-- Modify: `skills/tutorail-authoring/references/course-spec-format.md`
+- Modify: `skills/belay-authoring/SKILL.md`
+- Modify: `skills/belay-authoring/references/interview-create.md`
+- Modify: `skills/belay-authoring/references/interview-modify.md`
+- Modify: `skills/belay-authoring/references/course-spec-format.md`
 
 No tests: these are instructions to a reader. The verification is Step 5.
 
@@ -821,9 +821,9 @@ own self-check list to match, or the section will be written once and never agai
 - [ ] **Step 5: Verify by grepping, not by remembering**
 
 ```bash
-cd ~/src/github.com/skomp/tutorail-authoring
-grep -rn "supplies" skills/tutorail-authoring/SKILL.md skills/tutorail-authoring/references/
-grep -rn "starter/" skills/tutorail-authoring/
+cd ~/src/github.com/skomp/belay-authoring
+grep -rn "supplies" skills/belay-authoring/SKILL.md skills/belay-authoring/references/
+grep -rn "starter/" skills/belay-authoring/
 ```
 
 Every one of the four files must appear in the first result. Report the count.
@@ -831,7 +831,7 @@ Every one of the four files must appear in the first result. Report the count.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add skills/tutorail-authoring/SKILL.md skills/tutorail-authoring/references/
+git add skills/belay-authoring/SKILL.md skills/belay-authoring/references/
 git commit -m "Forbid authored toil: declare it, do not teach it"
 ```
 
@@ -844,7 +844,7 @@ git commit -m "Forbid authored toil: declare it, do not teach it"
 - Create: `tests/test_audit.py`
 - Create: `tests/fixtures/toil-course/` (a small bundle carrying both controls)
 - Modify: `tests/harness.py` — **a new base constant, not a fifth sibling.** `SCRIPTS`
-  points at `skills/tutorail-authoring/scripts`; `audit.py` belongs to the course-quality
+  points at `skills/belay-authoring/scripts`; `audit.py` belongs to the course-quality
   skill, so it needs its own base, and a second session's `dryrun.py` will hang off the
   same one:
 
@@ -856,7 +856,7 @@ git commit -m "Forbid authored toil: declare it, do not teach it"
 
 - `tests/run_all.py` needs **no edit**: it discovers suites with
   `sorted(HERE.glob("test_*.py"))` at line 72. Add the suite to `NEEDS_CLEAN_SEARCH`
-  (line 67) only if it manipulates `TUTORAIL_VALIDATOR`, which this one does not.
+  (line 67) only if it manipulates `BELAY_VALIDATOR`, which this one does not.
 
 **Interfaces:**
 - Consumes: `bl.load_bundle`, `bl.Lesson`, `bl._ANCHOR_RE`, `yamlite.load_yaml`
@@ -1000,14 +1000,14 @@ not claim a topic is covered.
 - [ ] **Step 5: Run and watch them pass**
 
 ```bash
-cd ~/src/github.com/skomp/tutorail-authoring && python3 tests/test_audit.py
+cd ~/src/github.com/skomp/belay-authoring && python3 tests/test_audit.py
 ```
 
 - [ ] **Step 6: Run it against the two real bundles and read the output yourself**
 
 ```bash
-python3 skills/course-quality/scripts/audit.py ../tutorail-bundles/webgl-typescript-scene
-python3 skills/course-quality/scripts/audit.py ../tutorail-bundles/durable-event-broker
+python3 skills/course-quality/scripts/audit.py ../belay-bundles/webgl-typescript-scene
+python3 skills/course-quality/scripts/audit.py ../belay-bundles/durable-event-broker
 ```
 
 The first must produce a candidate at `lessons/00-project-setup/LESSON.md:34` and one at
@@ -1074,7 +1074,7 @@ capitalised tool names listed in the global constraints are not.
 Three rules the skill must state about itself:
 
 - **it proposes and never edits.** Applying a proposal goes back through
-  `tutorail-authoring` and its toolkit, after the author says yes;
+  `belay-authoring` and its toolkit, after the author says yes;
 - **an empty candidate list is not a pass.** The script cannot see toil it has no pattern
   for. The score comes from reading;
 - **a green validator is not a good course.** Structural validity and teaching quality are
@@ -1106,7 +1106,7 @@ inconsistency; do not rely on it to.
 - [ ] **Step 4: Verify the skill loads**
 
 ```bash
-cd ~/src/github.com/skomp/tutorail-authoring && python3 tests/run_all.py
+cd ~/src/github.com/skomp/belay-authoring && python3 tests/run_all.py
 ```
 
 plus: read `skills/course-quality/SKILL.md` back in full and check the commands it names
@@ -1129,7 +1129,7 @@ git commit -m "Add the course-quality skill"
 
 ### Task B6: run it on the real courses and report
 
-**Files:** none changed in `tutorail-bundles`. **The webgl bundle is not edited by this
+**Files:** none changed in `belay-bundles`. **The webgl bundle is not edited by this
 plan.**
 
 - [ ] **Step 1: Audit `webgl-typescript-scene` and score it against the rubric**
@@ -1153,7 +1153,7 @@ the courses, and they are the most valuable thing this task produces.
 
 Record what the reports found and what was deliberately not acted on, so a later session
 does not have to re-derive it. Note the `catalog.py` `scope` gap a peer session filed in
-tutorAIl's `TODO.md` against this repository: the catalogue's `scope` line counts only the
+Belay's `TODO.md` against this repository: the catalogue's `scope` line counts only the
 main path, so a course with optional lessons gives no signal that they exist. It is not
 part of this plan and it should not be lost.
 

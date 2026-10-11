@@ -2,7 +2,7 @@
 
 > ## RULED 2026-09-13 — a project skeleton is toil. This report has been re-scored.
 >
-> **What was asked.** `skomp/tutorail-bundles#3` reported a learner who reached this class
+> **What was asked.** `skomp/belay-bundles#3` reported a learner who reached this class
 > of step, said *"can you create the base setup for me, there is no learning in that"*, and
 > changed `ownership_policy` in their own instance so the tutor would do it. That happened
 > twice, in two different courses. As first published, this report rejected the step as toil
@@ -18,7 +18,7 @@
 >
 > `npm install` was unambiguous under both tests, because `node_modules` cannot ship. A
 > project skeleton was not, and the rubric did not say which test wins. Filed as
-> `skomp/tutorail-authoring#11`.
+> `skomp/belay-authoring#11`.
 >
 > **What the author ruled, 2026-09-13.** When the two tests disagree, **the shippability
 > test wins: a project skeleton is toil.** The shippability question is asked in its full
@@ -57,12 +57,12 @@
 > re-scored one. The question is recorded above rather than deleted so a reader can still see
 > what was open and why the first published figures differed.
 
-Audited 2026-09-13 against `tutorail-authoring:course-quality` v0.3.0 and its rubric.
-Read-only: no file in `/Users/robert/src/github.com/skomp/tutorail-bundles` was created,
+Audited 2026-09-13 against `belay-authoring:course-quality` v0.3.0 and its rubric.
+Read-only: no file in `/Users/robert/src/github.com/skomp/belay-bundles` was created,
 edited, staged or deleted. Bundle checksums taken at the start and end of the audit are
 identical and `git status` is clean, so nothing changed under me.
 
-Every finding below is a **proposal**. Applying any of them is the `tutorail-authoring`
+Every finding below is a **proposal**. Applying any of them is the `belay-authoring`
 skill's job, after the author says yes.
 
 ---
@@ -424,7 +424,7 @@ out of the inventory on the first half of the test.
   rejected the site on the ground that a runnable project needs a toolchain; the ruling holds
   that the toolchain is what *runs* the project, not what writes `go.mod`, and that where the
   two tests disagree the shippability test wins. Note that this report had scored the act +2
-  where the rate-limiter report scored the same act +1 (`skomp/tutorail-bundles#3`); both are
+  where the rate-limiter report scored the same act +1 (`skomp/belay-bundles#3`); both are
   now −2. The remedy is proposal 7.
 
   **The exception was tested and does not apply. This was the judgement call in this report,
@@ -736,4 +736,4 @@ Two assertions in the dispatch, checked:
 - The brief's first scratchpad path was correct and its in-brief "correction" named a directory that
   does not exist (session id `…83f435a75604`). The only session directory present is
   `…83f835a75604`, which the coordinator's later message confirmed. This report is written to
-  `/private/tmp/claude-501/-Users-robert-src-github-com-skomp-tutorail-bundles/02117994-91ab-407b-b475-83f835a75604/scratchpad/audit-portable-bytebeat-wav.md`.
+  `/private/tmp/claude-501/-Users-robert-src-github-com-skomp-belay-bundles/02117994-91ab-407b-b475-83f835a75604/scratchpad/audit-portable-bytebeat-wav.md`.

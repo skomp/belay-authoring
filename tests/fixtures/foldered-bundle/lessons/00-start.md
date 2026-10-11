@@ -6,7 +6,7 @@ id: 00-start
 # only remaining coverage of that lenient path, and it is here on purpose:
 # foldered-bundle is synthetic, so unlike the rust-automaton-db fixture it
 # is never synchronised with a live bundle and cannot be "corrected" by a
-# later sync. See tutorail-authoring#21, and the assertion in
+# later sync. See belay-authoring#21, and the assertion in
 # tests/test_index.py case_no_purpose_section, which reads this exact value.
 # If you quote this title, that test fails and tells you to read this note.
 title: Getting started: the naming rule

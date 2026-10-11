@@ -514,7 +514,7 @@ def apply_renames(root: Path, bundle: bl.Bundle, slug_map: dict[str, str]) -> No
             continue
         source = lesson.folder if lesson.is_folder else lesson.path
         source = lessons_dir / source.name
-        temp = lessons_dir / f".tutorail-renumber-{number}"
+        temp = lessons_dir / f".belay-renumber-{number}"
         final_name = target_slug if lesson.is_folder else f"{target_slug}.md"
         source.rename(temp)
         staged.append((temp, lessons_dir / final_name))
@@ -644,7 +644,7 @@ def report_rewrites(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="lesson.py", description="Add or renumber lessons in a tutorAIl bundle."
+        prog="lesson.py", description="Add or renumber lessons in a Belay bundle."
     )
     sub = parser.add_subparsers(dest="command", required=True)
 

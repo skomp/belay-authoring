@@ -1,6 +1,6 @@
 # Dry-run harness — checkpoint, 2026-09-12
 
-Issue: skomp/tutorail-authoring#5. Read the issue first; it carries measured facts about
+Issue: skomp/belay-authoring#5. Read the issue first; it carries measured facts about
 `claude -p` that must not be re-derived.
 
 This file exists so the work can continue without the session that started it.

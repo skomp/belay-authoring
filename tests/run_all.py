@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run every tutorail-authoring test suite.
+"""Run every belay-authoring test suite.
 
     python3 tests/run_all.py            run them all
     python3 tests/run_all.py renumber   run only suites whose name matches
@@ -12,9 +12,9 @@ Exit code 0 only when every suite exits 0.
 
 PIN THE VALIDATOR WHEN A RESULT HAS TO BE ATTRIBUTABLE.
 
-Every suite runs the tutorAIl runner's `validate_bundle.py`, found by the
+Every suite runs the Belay runner's `validate_bundle.py`, found by the
 same search the toolkit uses - and on a developer machine that search leads,
-through `~/.agents/skills/tutorail`, to a CHECKOUT OF THE RUNNER THAT SOMEONE
+through `~/.agents/skills/belay`, to a CHECKOUT OF THE RUNNER THAT SOMEONE
 MAY BE EDITING. That happened during this suite's own development: the runner
 gained an `optional_lessons` format extension while these tests were running,
 and for a few minutes its validator raised
@@ -27,16 +27,16 @@ code under test, and a reader who had not looked would have believed them.
 So when a run has to mean something - a verification before finishing, a
 result quoted to someone - pin it to a validator that is not moving:
 
-    git -C <tutorAIl> show HEAD:skills/tutorail/scripts/validate_bundle.py > /tmp/v/validate_bundle.py
-    git -C <tutorAIl> show HEAD:skills/tutorail/scripts/yamlite.py         > /tmp/v/yamlite.py
-    TUTORAIL_VALIDATOR=/tmp/v/validate_bundle.py python3 tests/run_all.py
+    git -C <belay> show HEAD:skills/belay/scripts/validate_bundle.py > /tmp/v/validate_bundle.py
+    git -C <belay> show HEAD:skills/belay/scripts/yamlite.py         > /tmp/v/yamlite.py
+    BELAY_VALIDATOR=/tmp/v/validate_bundle.py python3 tests/run_all.py
 
 `yamlite.py` has to come too: the validator imports it from its own
 directory. Every suite prints which validator it used, so the pin is visible
 in the output rather than assumed.
 
 Two suites are ABOUT the search itself and must see a clean environment:
-test_validator_discovery.py sets `$TUTORAIL_VALIDATOR` per case to prove
+test_validator_discovery.py sets `$BELAY_VALIDATOR` per case to prove
 search location 1 works, and test_yamlite_drift.py resolves the runner's own
 `yamlite.py` through `find_runner_root()`. This runner therefore unsets the
 pin for exactly those two and says so, rather than letting an ambient pin
@@ -62,7 +62,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 
 # Suites that measure the validator SEARCH rather than using its result. An
-# ambient $TUTORAIL_VALIDATOR answers search location 1 for every case in
+# ambient $BELAY_VALIDATOR answers search location 1 for every case in
 # them, so they would report on the pin instead of on the search.
 NEEDS_CLEAN_SEARCH = {"test_validator_discovery.py", "test_yamlite_drift.py"}
 
@@ -76,15 +76,15 @@ def main(argv: list[str]) -> int:
         print(f"no suite matches {pattern!r}", file=sys.stderr)
         return 2
 
-    pinned = os.environ.get("TUTORAIL_VALIDATOR")
+    pinned = os.environ.get("BELAY_VALIDATOR")
     results: list[tuple[str, int]] = []
     for suite in suites:
         env = dict(os.environ)
         print("=" * 72)
         print(f"== {suite.name}")
         if suite.name in NEEDS_CLEAN_SEARCH and pinned:
-            env.pop("TUTORAIL_VALIDATOR", None)
-            print("== $TUTORAIL_VALIDATOR unset: this suite measures the search itself")
+            env.pop("BELAY_VALIDATOR", None)
+            print("== $BELAY_VALIDATOR unset: this suite measures the search itself")
         print("=" * 72)
         done = subprocess.run([sys.executable, str(suite)], env=env)
         results.append((suite.name, done.returncode))

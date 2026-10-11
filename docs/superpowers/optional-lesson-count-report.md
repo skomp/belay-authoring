@@ -1,17 +1,17 @@
 # optional_lesson_count - implementation report
 
-Issue: skomp/tutorail-authoring#8
+Issue: skomp/belay-authoring#8
 Commit: `f9e5d5475b0a772bdf6665437f00c061f18f0090`
 
 ## Status
 
 Done. Committed to `main` on top of a clean tree (no other change was in
-flight). `../tutorail-bundles` was read-only for the whole task - no file
+flight). `../belay-bundles` was read-only for the whole task - no file
 under it changed.
 
 ## What changed
 
-`skills/tutorail-authoring/scripts/catalog.py`:
+`skills/belay-authoring/scripts/catalog.py`:
 
 - Every catalogue entry now carries `optional_lesson_count`, computed as
   `len(bundle.optional)` where `bundle` is a `bundlelib.Bundle` built from
@@ -87,7 +87,7 @@ I then reverted the edit and diffed the file against a saved pristine copy
 byte-exact, and reran the suite to confirm all 100 assertions passed again
 before committing.
 
-## The table, verified three independent ways against `../tutorail-bundles`
+## The table, verified three independent ways against `../belay-bundles`
 
 Ran `catalog.py <bundles-repo> -o -` (stdout only, nothing written) against
 the real repository:
@@ -116,9 +116,9 @@ own new code path, so the match isn't just catalog.py agreeing with itself:
 
 ## Files touched
 
-- `skills/tutorail-authoring/scripts/catalog.py`
+- `skills/belay-authoring/scripts/catalog.py`
 - `tests/test_catalog.py`
 - `docs/superpowers/optional-lesson-count-report.md` (this report)
 
-Nothing under `/Users/robert/src/github.com/skomp/tutorAIl` or
-`../tutorail-bundles` was touched.
+Nothing under `/Users/robert/src/github.com/skomp/belay` or
+`../belay-bundles` was touched.

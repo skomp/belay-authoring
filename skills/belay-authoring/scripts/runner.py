@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Locate the installed tutorAIl runner, so nothing has to guess at its path.
+"""Locate the installed Belay runner, so nothing has to guess at its path.
 
 Usage:
     runner.py                         print every resolved path, labelled
@@ -9,7 +9,7 @@ Usage:
     runner.py --bundle-format         shorthand for --reference bundle-format.md
 
 This project depends on the runner and says so (design section 2): the bundle
-format contract and the validator both live in `skomp/tutorAIl`, and are not
+format contract and the validator both live in `skomp/belay`, and are not
 duplicated here. That leaves the authoring skill needing to READ files whose
 path it cannot know - the runner may be a Codex symlink, a Claude Code plugin
 cache, or a checkout pointed at by an environment variable.
@@ -17,10 +17,10 @@ cache, or a checkout pointed at by an environment variable.
 The search order is the one the mutating scripts already use for the
 validator, and it is implemented once, in bundlelib.find_validator:
 
-    1. $TUTORAIL_VALIDATOR                (its skill root is two levels up)
-    2. ~/.agents/skills/tutorail/scripts/validate_bundle.py
-    3. ~/.claude/skills/tutorail/scripts/validate_bundle.py
-    4. the newest ~/.claude/plugins/**/tutorail/**/scripts/validate_bundle.py
+    1. $BELAY_VALIDATOR                (its skill root is two levels up)
+    2. ~/.agents/skills/belay/scripts/validate_bundle.py
+    3. ~/.claude/skills/belay/scripts/validate_bundle.py
+    4. the newest ~/.claude/plugins/**/belay/**/scripts/validate_bundle.py
 
 A path is printed only when it exists. When the runner cannot be found, this
 prints the install message on stderr and exits 2 - it never prints a guess,
@@ -50,7 +50,7 @@ BUNDLE_FORMAT = "bundle-format.md"
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="runner.py",
-        description="Print paths inside the installed tutorAIl runner.",
+        description="Print paths inside the installed Belay runner.",
     )
     group = parser.add_mutually_exclusive_group()
     group.add_argument(

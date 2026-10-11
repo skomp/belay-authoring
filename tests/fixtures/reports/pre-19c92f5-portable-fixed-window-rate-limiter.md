@@ -2,7 +2,7 @@
 
 > ## OPEN QUESTION, raised 2026-09-13 after publication — the project-skeleton rulings are unsettled
 >
-> `skomp/tutorail-bundles#3` reports a learner who reached this class of step, said *"can
+> `skomp/belay-bundles#3` reports a learner who reached this class of step, said *"can
 > you create the base setup for me, there is no learning in that"*, and changed
 > `ownership_policy` in their own instance so the tutor would do it. That happened twice, in
 > two different courses.
@@ -20,22 +20,22 @@
 >
 > `npm install` is unambiguous under both tests, because `node_modules` cannot ship. A
 > project skeleton is not, and the rubric does not say which test wins. Filed as
-> `skomp/tutorail-authoring#11`.
+> `skomp/belay-authoring#11`.
 >
 > **The score consequence is stated below with each affected element.** Nothing is
 > re-scored here: the ruling belongs to the author, and a report patched to agree with a
 > ruling that has not been made would be worse than one that says it is open.
 
-Audited 2026-09-13 against `tutorail-authoring:course-quality` v0.3.0 and its
+Audited 2026-09-13 against `belay-authoring:course-quality` v0.3.0 and its
 `references/rubric.md`. Read-only: no file in the bundle was created, edited or staged.
 
-Bundle path: `/Users/robert/src/github.com/skomp/tutorail-bundles/portable-fixed-window-rate-limiter`
+Bundle path: `/Users/robert/src/github.com/skomp/belay-bundles/portable-fixed-window-rate-limiter`
 
 Evidence gathered with:
 
 ```
-cd /Users/robert/.claude/plugins/cache/tutorail-authoring/tutorail-authoring/0.3.0/skills/course-quality
-python3 scripts/audit.py /Users/robert/src/github.com/skomp/tutorail-bundles/portable-fixed-window-rate-limiter
+cd /Users/robert/.claude/plugins/cache/belay-authoring/belay-authoring/0.3.0/skills/course-quality
+python3 scripts/audit.py /Users/robert/src/github.com/skomp/belay-bundles/portable-fixed-window-rate-limiter
 ```
 
 All four lessons, `tutorial.yaml`, `COURSE.md`, `DESIGN.md` and `STATE.template.md` were
@@ -394,16 +394,16 @@ bundle.
 
 ---
 
-> **OPEN, `tutorail-authoring#11` — the `00:51-52` rejection above.** It assumed one fixed
+> **OPEN, `belay-authoring#11` — the `00:51-52` rejection above.** It assumed one fixed
 > `--from` path. A portable bundle can ship one skeleton per supported language and let the
 > tutor choose after `00:50`. If the author rules the step toil, the element goes +1 -> -2
 > and the course scores **32**, not 35. A learner hit exactly this step and asked for the
-> setup (`skomp/tutorail-bundles#3`).
+> setup (`skomp/belay-bundles#3`).
 
 ## 5. Proposals
 
 Every one is a concrete action, and every one is refusable. Applying any of them is the
-`tutorail-authoring` skill's job, not this one's; nothing in the bundle was changed here.
+`belay-authoring` skill's job, not this one's; nothing in the bundle was changed here.
 
 ### Proposal 1 — give lesson 02's retention limitation an anchor that answers it
 
@@ -416,7 +416,7 @@ is per-key, in-memory and non-scanning, and says nothing about growth, eviction 
 A learner who follows the citation to find out why cleanup is not required does not find
 out.
 
-**Action.** Through `tutorail-authoring`, either extend `#state-model` with the retention
+**Action.** Through `belay-authoring`, either extend `#state-model` with the retention
 decision, or add a new anchor and cite it:
 
 ```

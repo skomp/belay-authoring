@@ -2,7 +2,7 @@ bundle_format: 1
 id: durable-event-broker-mini
 title: Durable Event Broker (trimmed fixture)
 description: >
-  A small, trimmed copy of durable-event-broker (tutorail-bundles), kept just
+  A small, trimmed copy of durable-event-broker (belay-bundles), kept just
   big enough to exercise a bundle that uses optional_lessons: two lessons on
   the main path and one optional lesson offered alongside the second.
 subjects: [distributed-systems, testing]

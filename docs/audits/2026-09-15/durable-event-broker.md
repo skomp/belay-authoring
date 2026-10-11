@@ -1,7 +1,7 @@
 # Course-quality audit: `durable-event-broker`
 
 Audited read-only on 2026-09-15. Nothing in the bundle was created, edited, staged or
-deleted; `git status --porcelain` in `skomp/tutorail-bundles` was empty before this audit
+deleted; `git status --porcelain` in `skomp/belay-bundles` was empty before this audit
 began and empty after it finished.
 
 ## Provenance
@@ -13,13 +13,13 @@ reader produced it.
 ```
 Audit provenance, 2026-09-15 — identical for all five bundles
 
-bundles     skomp/tutorail-bundles @ 221c164 (== origin/main, tree clean)
-rubric      skomp/tutorail-authoring @ 86c2bc7, plugin 0.4.0
+bundles     skomp/belay-bundles @ 221c164 (== origin/main, tree clean)
+rubric      skomp/belay-authoring @ 86c2bc7, plugin 0.4.0
             skills/course-quality/references/rubric.md
 validator   pinned copy of the WHOLE scripts directory from the source checkout
-            skomp/tutorAIl @ 717c575  ->  /private/tmp/claude-501/-Users-robert-src-github-com-skomp-tutorail-authoring/19f2342f-a334-4dd6-9b45-348b60a85a2d/scratchpad/pin/validate_bundle.py
+            skomp/belay @ 717c575  ->  /private/tmp/claude-501/-Users-robert-src-github-com-skomp-belay-authoring/19f2342f-a334-4dd6-9b45-348b60a85a2d/scratchpad/pin/validate_bundle.py
             (10 validate_bundle.py copies exist on this machine; this is the source one)
-yaml reader restricted built-in, ALWAYS — tutorAIl#29 decided at 7419722,
+yaml reader restricted built-in, ALWAYS — belay#29 decided at 7419722,
             "Parse YAML with the restricted reader always, never PyYAML".
             PyYAML 6.0.3 is importable here and is deliberately not used.
 verdicts    all five bundles: PASS - every applicable check ran and found nothing. exit 0
@@ -28,8 +28,8 @@ verdicts    all five bundles: PASS - every applicable check ran and found nothin
 Re-run here for this bundle alone, against the pinned directory, and confirmed:
 
 ```
-tutorAIl validator - mode: bundle
-target:      /Users/robert/src/github.com/skomp/tutorail-bundles/durable-event-broker
+Belay validator - mode: bundle
+target:      /Users/robert/src/github.com/skomp/belay-bundles/durable-event-broker
 yaml reader: restricted (built in, stdlib only)
 ...
   [22] ran     supplies entries are well-formed, and every 'from' resolves where the
@@ -791,7 +791,7 @@ rejected.
 ## 5. Proposals
 
 Every one is a proposal the author may refuse. None has been applied; applying any goes back
-through the `tutorail-authoring` skill and its toolkit.
+through the `belay-authoring` skill and its toolkit.
 
 **P1 — Reword objective `00-running-broker.md:21`. The other half of last audit's P5.**
 The bundle took P5's first half — it shipped the skeleton — and left the objective as it
@@ -876,14 +876,14 @@ services". If the author wants that part handed over, the entry would be manifes
 
 ```
 python3 scripts/supplies.py add \
-  /Users/robert/src/github.com/skomp/tutorail-bundles/durable-event-broker \
+  /Users/robert/src/github.com/skomp/belay-bundles/durable-event-broker \
   --from testdata/service-logs.jsonl \
   --to testdata/service-logs.jsonl \
   --describe "Fictional multi-service JSON application logs, used as one opaque broker workload" \
   --check
 ```
 
-run from the `tutorail-authoring` skill's own directory, not this one. Two honest caveats,
+run from the `belay-authoring` skill's own directory, not this one. Two honest caveats,
 both unchanged since 2026-09-13. First, **`testdata/service-logs.jsonl` does not exist in
 the bundle** — the skill names that as the tell that something was never toil, and here it
 means the author would have to author the corpus before declaring it. Second, a
@@ -1028,7 +1028,7 @@ every term the anchors introduce is also introduced by the lesson that cites the
 
 **The sort above is the reader's, candidate by candidate, and no rule of shape performed
 it.** A future `DESIGN.md` convention marking a conceptual parameter apart from a type would
-make it mechanical; that is a bundle-format question owned by `skomp/tutorAIl` and is not
+make it mechanical; that is a bundle-format question owned by `skomp/belay` and is not
 settled here.
 
 ### Row 4 — does the lesson equip the tutor to end a turn with one concrete action?
@@ -1277,9 +1277,9 @@ it passed with exit 0. **Its result was not an input to any figure above.** Stru
 validity and teaching quality are different questions: the validator answers "is this a
 bundle?", and this report answers "does this teach?". `validate_bundle.py` was not changed,
 and no finding in this report may reject a bundle — every one of them is a proposal the
-author can accept or refuse, and applying any goes back through the `tutorail-authoring`
+author can accept or refuse, and applying any goes back through the `belay-authoring`
 skill and its toolkit.
 
 **This report proposes and changed nothing.** The bundle is byte-identical to commit
-`221c164`; `git status --porcelain` in `skomp/tutorail-bundles` was empty before this audit
+`221c164`; `git status --porcelain` in `skomp/belay-bundles` was empty before this audit
 and empty after it.

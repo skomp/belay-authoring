@@ -1,15 +1,15 @@
 {
-  "name": "tutorail-authoring",
-  "description": "Authoring and maintenance tooling for tutorAIl bundles",
+  "name": "belay-authoring",
+  "description": "Authoring and maintenance tooling for Belay bundles",
   "owner": {
     "name": "skomp"
   },
   "plugins": [
     {
-      "name": "tutorail-authoring",
+      "name": "belay-authoring",
       "source": "./",
       "version": "0.4.0",
-      "description": "Two skills: tutorail-authoring interviews you about a course, then builds or changes a tutorAIl bundle correctly; course-quality audits one for what it teaches and where its toil is.",
+      "description": "Two skills: belay-authoring interviews you about a course, then builds or changes a Belay bundle correctly; course-quality audits one for what it teaches and where its toil is.",
       "author": {
         "name": "skomp",
         "url": "https://github.com/skomp"

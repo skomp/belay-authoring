@@ -36,8 +36,8 @@ import time
 from pathlib import Path
 
 MARKER = "LESSON COMPLETE"
-TUTOR_OPENING = "You are the tutor in a dry run of a tutorAIl course."
-LEARNER_OPENING = "You are the learner in a dry run of a tutorAIl course."
+TUTOR_OPENING = "You are the tutor in a dry run of a Belay course."
+LEARNER_OPENING = "You are the learner in a dry run of a Belay course."
 
 
 def prompt_of(argv: list[str]) -> str:

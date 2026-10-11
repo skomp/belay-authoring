@@ -4,7 +4,7 @@
 **Reviewed commit:** 67ef718 (plus 565b888, which made `test_yamlite_drift.py` green)
 **Spec:** `docs/superpowers/specs/2026-09-12-optional-lessons-in-the-toolkit.md` (approved)
 **Implementation report:** `docs/superpowers/optional-lessons-report.md`
-**Issues:** skomp/tutorail-authoring#1 (feature), #7 (SKILL.md)
+**Issues:** skomp/belay-authoring#1 (feature), #7 (SKILL.md)
 
 ---
 
@@ -31,8 +31,8 @@ one finding is closed slightly differently from how it was written — see secti
 Measured with the whole runner scripts directory pinned, as the dispatch requires:
 
 ```
-mkdir -p /tmp/fixpin && cp ~/.claude/plugins/marketplaces/tutorail/skills/tutorail/scripts/*.py /tmp/fixpin/
-TUTORAIL_VALIDATOR=/tmp/fixpin/validate_bundle.py python3 tests/run_all.py
+mkdir -p /tmp/fixpin && cp ~/.claude/plugins/marketplaces/belay/skills/belay/scripts/*.py /tmp/fixpin/
+BELAY_VALIDATOR=/tmp/fixpin/validate_bundle.py python3 tests/run_all.py
 ```
 
 | | Before this wave | After |
@@ -47,7 +47,7 @@ tree as it stood at 565b888, before anything here was edited.
 
 ## 3. Important 3 — the modes reach the calling agent
 
-`skills/tutorail-authoring/SKILL.md` gained one table row per mode, and a three-bullet
+`skills/belay-authoring/SKILL.md` gained one table row per mode, and a three-bullet
 block under the table for the contracts the table cannot show:
 
 1. **`--offer-at`, `--repair-in` and `--required-for` name a MAIN-PATH lesson**, and accept
@@ -87,7 +87,7 @@ repository:
 | Hit | Verdict |
 |---|---|
 | `README.md:107` | changed — the row now says `lessons` list, and a second row documents `--optional` |
-| `skills/tutorail-authoring/scripts/index.py:70` | changed — carries a dated correction note, and says index.py still only READS the field |
+| `skills/belay-authoring/scripts/index.py:70` | changed — carries a dated correction note, and says index.py still only READS the field |
 | `docs/superpowers/optional-lessons-report.md:58` | **left** — it is the implementer quoting the old docstring inside their own correction note. Rewriting a quotation would make the note incoherent. |
 
 Pattern 2, `(?i)inserts?\s+into\s+.?lessons`, found a fourth instance the review did not
@@ -164,7 +164,7 @@ suite and every one of those assertions still passed, because they all asserted 
 
 ## 7. Where this deviates from the dispatch
 
-**Minor 8.** The dispatch asked for `tutorail-authoring#7` as a row in `TODO.md`'s dated
+**Minor 8.** The dispatch asked for `belay-authoring#7` as a row in `TODO.md`'s dated
 table. That table is explicitly a list of what is still OPEN, and this commit closes #7, so
 a row would have been false from the moment it landed. Instead the table's lead-in now
 names the optional-lesson work, and two short bullets under it record #7 as filed and closed

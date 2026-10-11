@@ -15,13 +15,13 @@ bundles in this run:
 ```
 Audit provenance, 2026-09-15 — identical for all five bundles
 
-bundles     skomp/tutorail-bundles @ 221c164 (== origin/main, tree clean)
-rubric      skomp/tutorail-authoring @ 86c2bc7, plugin 0.4.0
+bundles     skomp/belay-bundles @ 221c164 (== origin/main, tree clean)
+rubric      skomp/belay-authoring @ 86c2bc7, plugin 0.4.0
             skills/course-quality/references/rubric.md
 validator   pinned copy of the WHOLE scripts directory from the source checkout
-            skomp/tutorAIl @ 717c575  ->  /private/tmp/claude-501/-Users-robert-src-github-com-skomp-tutorail-authoring/19f2342f-a334-4dd6-9b45-348b60a85a2d/scratchpad/pin/validate_bundle.py
+            skomp/belay @ 717c575  ->  /private/tmp/claude-501/-Users-robert-src-github-com-skomp-belay-authoring/19f2342f-a334-4dd6-9b45-348b60a85a2d/scratchpad/pin/validate_bundle.py
             (10 validate_bundle.py copies exist on this machine; this is the source one)
-yaml reader restricted built-in, ALWAYS — tutorAIl#29 decided at 7419722,
+yaml reader restricted built-in, ALWAYS — belay#29 decided at 7419722,
             "Parse YAML with the restricted reader always, never PyYAML".
             PyYAML 6.0.3 is importable here and is deliberately not used.
 verdicts    all five bundles: PASS - every applicable check ran and found nothing. exit 0
@@ -30,8 +30,8 @@ verdicts    all five bundles: PASS - every applicable check ran and found nothin
 Confirmed for this bundle specifically, by running the pinned validator myself:
 
 ```
-tutorAIl validator - mode: bundle
-target:      .../tutorail-bundles/portable-fixed-window-rate-limiter
+Belay validator - mode: bundle
+target:      .../belay-bundles/portable-fixed-window-rate-limiter
 yaml reader: restricted (built in, stdlib only)
 ...
 PASS - every applicable check ran and found nothing.
@@ -47,9 +47,9 @@ The run above reports a real check inventory and exit 0, so it ran.
 report answers *does this teach?* Nothing below rejects the bundle, and
 `validate_bundle.py` is unchanged by this audit.
 
-**Bundles repo state.** `git status --porcelain` in `skomp/tutorail-bundles` was empty at the
+**Bundles repo state.** `git status --porcelain` in `skomp/belay-bundles` was empty at the
 start of this audit and empty at the end. Nothing in that repository was created, edited or
-staged. This audit wrote exactly one file, in `skomp/tutorail-authoring`:
+staged. This audit wrote exactly one file, in `skomp/belay-authoring`:
 `docs/audits/2026-09-15/portable-fixed-window-rate-limiter.md`.
 
 ---
@@ -423,7 +423,7 @@ fired through an anchor (section 4), and it is the basis of proposal 2.
 charge.**
 
 The 2026-09-13 report confirmed exactly one site, at `00:51-52`. **That site no longer exists.**
-`skomp/tutorail-bundles` commit `a67de21` ("rate limiter: define N and W, and let the tutor set
+`skomp/belay-bundles` commit `a67de21` ("rate limiter: define N and W, and let the tutor set
 the project up", 2026-09-13) replaced it. What follows is the ruling on the replacement, which
 is the judgement this bundle turns on.
 
@@ -456,7 +456,7 @@ an evidence step about the whole project, and it reads identically whichever bra
 above. And in `ownership_policy`, at `tutorial.yaml:43`: `on-request`, changed from
 `tutor-must-not-edit-learner-owned` by the same commit. A reviewer can point at both. The
 runner's own format document treats this bundle as the worked example of exactly this pattern —
-`skills/tutorail/references/bundle-format.md:278-293` in `skomp/tutorAIl` names
+`skills/belay/references/bundle-format.md:278-293` in `skomp/belay` names
 `portable-fixed-window-rate-limiter`, cites `COURSE.md`'s promise that the learner "writes every
 implementation", and quotes this lesson's limiting clause ("the skeleton only, never any part of
 the limiter, which stays theirs to write") as the thing that holds the two together. The
@@ -574,7 +574,7 @@ The learner must be able to name the limitation, not solve it.
 ```
 
 — then add `retention-limits` to `lessons/02-boundaries-and-evidence.md:4`. The work goes
-through the `tutorail-authoring` skill and its toolkit, not through this one.
+through the `belay-authoring` skill and its toolkit, not through this one.
 
 ### Proposal 2 — record the setup hand-over in `DESIGN.md`, and align lesson 00's framing text
 
@@ -743,7 +743,7 @@ dangling. Within the optional lesson, all five of `opt:39-43` are used by its ow
 This is the row's canonical case, and this bundle is where it came from: a learner said on
 2026-09-13 that "the tutor throws in variables N and W and doesn't explain them", and at that
 time `DESIGN.md:6` was the only binding of either symbol. **That is repaired, and I verified the
-repair in the current lessons rather than re-quoting `tutorail-authoring#14`:**
+repair in the current lessons rather than re-quoting `belay-authoring#14`:**
 
 | Symbol | First use in a lesson | Introduced to the learner at | Verdict |
 |---|---|---|---|
@@ -803,7 +803,7 @@ produced the row, and they are evidence about the file, not the finding.
 
 **`lessons/00-contract-and-language.md` — FAIL, on both conditions, at two sites.** Both are the
 sites the rubric names, both are still present, and I took the line numbers from the file rather
-than from `tutorail-authoring#13`:
+than from `belay-authoring#13`:
 
 - **Condition 1 — a progression bullet carrying two actions.** `:66` reads:
 
@@ -977,7 +977,7 @@ main path 24). Every figure below was re-derived from the current files; none wa
 
 **One change to the bundle and one change to the rubric account for every delta.**
 
-- **Bundle:** `skomp/tutorail-bundles` commit `a67de21` (2026-09-13), touching three files —
+- **Bundle:** `skomp/belay-bundles` commit `a67de21` (2026-09-13), touching three files —
   `lessons/00-contract-and-language.md` (+16/−3), `lessons/01-windowed-counting.md` (prose only,
   3 lines rewrapped with `W` inserted, no line-number shift), and `tutorial.yaml`
   (`ownership_policy: tutor-must-not-edit-learner-owned` → `on-request`). No commit has touched

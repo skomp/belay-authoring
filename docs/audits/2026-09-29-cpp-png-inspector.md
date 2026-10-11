@@ -1,6 +1,6 @@
 # Course quality: `cpp-png-inspector`
 
-**Run:** 2026-09-29. **Bundle:** `skomp/tutorail-bundles`, branch `worktree-cpp-png-inspector`
+**Run:** 2026-09-29. **Bundle:** `skomp/belay-bundles`, branch `worktree-cpp-png-inspector`
 (unpushed at the time of the audit), at commit `3a5fa34`.
 **Rubric:** `skills/course-quality/references/rubric.md`, repository source, as at 2026-09-29.
 

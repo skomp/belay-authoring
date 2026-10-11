@@ -18,10 +18,10 @@
 >
 > `npm install` is unambiguous under both tests, because `node_modules` cannot ship. A
 > project skeleton was not, and the rubric did not say which test wins. The question was
-> not academic: `skomp/tutorail-bundles#3` reports a learner who reached this class of step,
+> not academic: `skomp/belay-bundles#3` reports a learner who reached this class of step,
 > said *"can you create the base setup for me, there is no learning in that"*, and changed
 > `ownership_policy` in their own instance so the tutor would do it. That happened twice, in
-> two different courses. Filed as `skomp/tutorail-authoring#11`.
+> two different courses. Filed as `skomp/belay-authoring#11`.
 >
 > ### What the author ruled, 2026-09-13
 >
@@ -85,9 +85,9 @@
 
 Read-only audit. Nothing in the bundle was created, edited, staged or deleted. Every
 finding below is a **proposal** the author may accept or refuse; applying one goes back
-through the `tutorail-authoring` skill and its toolkit.
+through the `belay-authoring` skill and its toolkit.
 
-Audited at: `/Users/robert/src/github.com/skomp/tutorail-bundles/rust-automaton-db`
+Audited at: `/Users/robert/src/github.com/skomp/belay-bundles/rust-automaton-db`
 Evidence script: `scripts/audit.py` from the `course-quality` skill, both forms.
 
 ---
@@ -723,7 +723,7 @@ element-by-element verification follows the table.
 
 ### The project skeleton at `00:76` — why this course takes the exception
 
-Added 2026-09-13, when the author ruled `tutorail-authoring#11`. The rubric's tiebreak makes
+Added 2026-09-13, when the author ruled `belay-authoring#11`. The rubric's tiebreak makes
 a project skeleton toil, and its exception makes a skeleton **teaching** when the setup step
 is the only element serving the objective that names it. This is the verification the
 exception requires, done against the full element list in section 2 rather than from memory.
@@ -784,7 +784,7 @@ obligation in the catalogue, cheaper than the portable bundles that owe one set 
 Single-language therefore makes the shippability answer *easier*, and shippability is not
 what saves this element. Nor is `tutorial.yaml:39`, which marks `Cargo.toml` and
 `Cargo.lock` `learner_owned`: that is the author's declaration in the author's own manifest,
-and it is the very line `skomp/tutorail-bundles#3` reports a learner editing. A course
+and it is the very line `skomp/belay-bundles#3` reports a learner editing. A course
 cannot exempt itself from the toil row by declaring the toil's output learner-owned. What
 saves `00:76` is `00:24`, and nothing else.
 
@@ -811,7 +811,7 @@ one place it does not disarm is `22:63`.
 
 ---
 
-> **RULED, `tutorail-authoring#11` — settled 2026-09-13. The prediction in this note did
+> **RULED, `belay-authoring#11` — settled 2026-09-13. The prediction in this note did
 > not happen.** The note read: *"A single-language course can ship a `Cargo.toml` and a
 > `src/` skeleton outright, so 'could not have supplied' is too strong here as well. The
 > element scored 0, so a toil ruling moves the course to 353."* Its first half was right and
@@ -824,14 +824,14 @@ one place it does not disarm is `22:63`.
 ## 5. Proposals
 
 Every one is a concrete action. All are refusable, and applying any of them is the
-`tutorail-authoring` skill's job, not this one's.
+`belay-authoring` skill's job, not this one's.
 
 **Proposal 1 — ship the CI workflow and delete the boilerplate half of `22:63`.** This is
 the report's one toil fix.
 
 ```
-cd /Users/robert/.claude/plugins/cache/tutorail-authoring/tutorail-authoring/0.3.0/skills/tutorail-authoring
-python3 scripts/supplies.py add /Users/robert/src/github.com/skomp/tutorail-bundles/rust-automaton-db \
+cd /Users/robert/.claude/plugins/cache/belay-authoring/belay-authoring/0.3.0/skills/belay-authoring
+python3 scripts/supplies.py add /Users/robert/src/github.com/skomp/belay-bundles/rust-automaton-db \
   --from lessons/22-hardening-performance/ci.yml \
   --to .github/workflows/ci.yml \
   --describe "Baseline CI workflow: cargo build, test, fmt --check and clippy on push and PR. Extend it in this lesson with the fuzz, crash and partition jobs." \
@@ -845,7 +845,7 @@ Two things must happen before that command can run, and both are part of the fix
    A `--lesson`-scoped `--from` must live inside that lesson's own folder under `lessons/`,
    because materialization copies only `lessons/` into the instance. So lesson 22 becomes a
    directory: `lessons/22-hardening-performance/LESSON.md` plus `ci.yml`. That is a
-   `tutorail-authoring` restructure, and it should be done through the toolkit so
+   `belay-authoring` restructure, and it should be done through the toolkit so
    `tutorial.yaml:35` is rewritten consistently.
 2. If the author prefers not to restructure, use a **manifest-scope** entry instead — drop
    `--lesson` and put `ci.yml` at the bundle root. Manifest scope has no `lessons/`
@@ -901,8 +901,8 @@ silently spends an hour on YAML the lesson never admits to assigning (toil that 
 chargeable), or they stall. Ship it:
 
 ```
-cd /Users/robert/.claude/plugins/cache/tutorail-authoring/tutorail-authoring/0.3.0/skills/tutorail-authoring
-python3 scripts/supplies.py add /Users/robert/src/github.com/skomp/tutorail-bundles/rust-automaton-db \
+cd /Users/robert/.claude/plugins/cache/belay-authoring/belay-authoring/0.3.0/skills/belay-authoring
+python3 scripts/supplies.py add /Users/robert/src/github.com/skomp/belay-bundles/rust-automaton-db \
   --from lessons/14-static-cluster-placement/docker-compose.yml \
   --to docker-compose.yml \
   --describe "Three-node development cluster. Node identity and advertised address come from environment variables the learner wires up in this lesson." \

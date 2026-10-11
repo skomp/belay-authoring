@@ -647,7 +647,7 @@ def main() -> int:
 
 
 # --------------------------------------------------------------------------
-# tutorail-authoring#6 - a valid catalogue must not depend on how its path is spelled
+# belay-authoring#6 - a valid catalogue must not depend on how its path is spelled
 # --------------------------------------------------------------------------
 
 def _repo_with_one_bundle(ws: Workspace) -> Path:

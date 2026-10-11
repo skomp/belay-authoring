@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-12
 **Spec:** `docs/superpowers/specs/2026-09-12-optional-lessons-in-the-toolkit.md` (approved)
-**Issue:** skomp/tutorail-authoring#1
+**Issue:** skomp/belay-authoring#1
 
 ---
 
@@ -24,8 +24,8 @@ since been made green by 565b888; see the correction note there).
 Measured with the whole runner scripts directory pinned:
 
 ```
-mkdir -p /tmp/optpin && cp ~/.claude/plugins/marketplaces/tutorail/skills/tutorail/scripts/*.py /tmp/optpin/
-TUTORAIL_VALIDATOR=/tmp/optpin/validate_bundle.py python3 tests/run_all.py
+mkdir -p /tmp/optpin && cp ~/.claude/plugins/marketplaces/belay/skills/belay/scripts/*.py /tmp/optpin/
+BELAY_VALIDATOR=/tmp/optpin/validate_bundle.py python3 tests/run_all.py
 ```
 
 | Suite | Before | After |
@@ -161,7 +161,7 @@ with it).
 
 > **CORRECTION, 2026-09-12, added after the review of 67ef718.** This section is now
 > historical. `test_yamlite_drift.py` is GREEN: commit 565b888 re-copied the vendored
-> `skills/tutorail-authoring/scripts/yamlite.py` from the runner, which is what the
+> `skills/belay-authoring/scripts/yamlite.py` from the runner, which is what the
 > vendored banner tells the next reader to do and what this section argued should happen
 > elsewhere. The full suite is green, 11 suites. The passage below is kept rather than
 > deleted because someone read it while it was true, and the reasoning in it — that a
@@ -171,12 +171,12 @@ with it).
 
 `test_yamlite_drift.py` fails: 4 of 49 assertions.
 
-It compares the vendored `skills/tutorail-authoring/scripts/yamlite.py` against the runner's
-own copy, and `run_all.py` deliberately UNSETS `$TUTORAIL_VALIDATOR` for it, so it always
+It compares the vendored `skills/belay-authoring/scripts/yamlite.py` against the runner's
+own copy, and `run_all.py` deliberately UNSETS `$BELAY_VALIDATOR` for it, so it always
 measures the live runner checkout and cannot be pinned.
 
 **The live runner checkout changed while this work was in progress.**
-`~/.agents/skills/tutorail/scripts/yamlite.py` and `validate_bundle.py` both have an mtime
+`~/.agents/skills/belay/scripts/yamlite.py` and `validate_bundle.py` both have an mtime
 of 21:51 on 2026-09-12; the full suite passed twice earlier in the same session, including
 once after every source change here was already in place. The diff against the plugin copy
 is a docstring reword:
@@ -221,9 +221,9 @@ had to be made:
 
 ## 9. What this change does NOT close
 
-- `skills/tutorail-authoring/SKILL.md` still documents `lesson.py add` and `promote.py`
+- `skills/belay-authoring/SKILL.md` still documents `lesson.py add` and `promote.py`
   without the new modes: the command table at lines 117-121 needs two rows. That file was
   outside this change's file ownership and was deliberately left alone. It is the one
   follow-up and it is filed as an issue.
 - `catalog.py`'s `scope` line still counts the main path only - out of scope by the spec,
-  tracked as tutorail-authoring#2.
+  tracked as belay-authoring#2.

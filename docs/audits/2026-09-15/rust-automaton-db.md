@@ -1,12 +1,12 @@
 # Course quality audit: `rust-automaton-db` — 2026-09-15
 
-Read-only audit. Nothing in `skomp/tutorail-bundles` was created, edited, staged or
+Read-only audit. Nothing in `skomp/belay-bundles` was created, edited, staged or
 deleted; `git status --porcelain` in that repository was empty at the start of this audit
 and empty at the end. Every finding below is a **proposal** the author may accept or
-refuse; applying one goes back through the `tutorail-authoring` skill and its toolkit.
+refuse; applying one goes back through the `belay-authoring` skill and its toolkit.
 No finding here rejects a bundle, and `validate_bundle.py` was not modified.
 
-Audited at: `/Users/robert/src/github.com/skomp/tutorail-bundles/rust-automaton-db`
+Audited at: `/Users/robert/src/github.com/skomp/belay-bundles/rust-automaton-db`
 Baseline compared against: `docs/audits/2026-09-13/rust-automaton-db.md`
 
 ## Provenance
@@ -14,13 +14,13 @@ Baseline compared against: `docs/audits/2026-09-13/rust-automaton-db.md`
 ```
 Audit provenance, 2026-09-15 — identical for all five bundles
 
-bundles     skomp/tutorail-bundles @ 221c164 (== origin/main, tree clean)
-rubric      skomp/tutorail-authoring @ 86c2bc7, plugin 0.4.0
+bundles     skomp/belay-bundles @ 221c164 (== origin/main, tree clean)
+rubric      skomp/belay-authoring @ 86c2bc7, plugin 0.4.0
             skills/course-quality/references/rubric.md
 validator   pinned copy of the WHOLE scripts directory from the source checkout
-            skomp/tutorAIl @ 717c575  ->  /private/tmp/claude-501/-Users-robert-src-github-com-skomp-tutorail-authoring/19f2342f-a334-4dd6-9b45-348b60a85a2d/scratchpad/pin/validate_bundle.py
+            skomp/belay @ 717c575  ->  /private/tmp/claude-501/-Users-robert-src-github-com-skomp-belay-authoring/19f2342f-a334-4dd6-9b45-348b60a85a2d/scratchpad/pin/validate_bundle.py
             (10 validate_bundle.py copies exist on this machine; this is the source one)
-yaml reader restricted built-in, ALWAYS — tutorAIl#29 decided at 7419722,
+yaml reader restricted built-in, ALWAYS — belay#29 decided at 7419722,
             "Parse YAML with the restricted reader always, never PyYAML".
             PyYAML 6.0.3 is importable here and is deliberately not used.
 verdicts    all five bundles: PASS - every applicable check ran and found nothing. exit 0
@@ -474,7 +474,7 @@ statement of required coverage, and each line in the fenced block is a stated ob
 > topics. This is a DIFFERENT finding from declaring none at all: the author started this
 > section and never filled it in.
 
-**That is false about this course, and it is `tutorail-authoring#10` — still open.** The
+**That is false about this course, and it is `belay-authoring#10` — still open.** The
 coverage list is present and complete: `COURSE.md:221` is the heading, `:225` opens a
 ```` ```text ```` fence, `:226-270` name 45 topics one per line, `:271` closes it. The
 script's topic extractor reads list items and not fenced blocks, so it reported zero
@@ -494,7 +494,7 @@ required. This is a defect in the `course-quality` skill, not in `rust-automaton
 | G4 | **Cargo workspaces** | `COURSE.md:267` | The only mentions in the whole bundle are `COURSE.md:67` (teaching philosophy), `COURSE.md:267` (the coverage line itself), and `00:70`, which is a **prohibition**: "Do not introduce modules/workspaces merely for style." No later lesson lifts it. Lesson 03, the one structural-refactor lesson, produces `src/lib.rs` + `src/main.rs` — two targets in one package, not a workspace. | −3 |
 | G5 | **refactoring across crate boundaries** | `COURSE.md:269` | Same evidence as G4, and listed as its own coverage line, so counted as its own gap under the per-gap rule. Lesson 03 refactors across a **target** boundary inside one crate (`03:33`). The course never has more than one crate, so a cross-crate refactor is not possible in it as written. One lesson would close G4 and G5 together; they are still two stated objectives and are counted as two. | −3 |
 
-All five persist unchanged from 2026-09-13, which is what `tutorail-bundles#7` predicts
+All five persist unchanged from 2026-09-13, which is what `belay-bundles#7` predicts
 while it stays open — but each was re-verified against the lessons in this audit rather
 than carried over.
 
@@ -747,14 +747,14 @@ longer arguable anywhere. `22:63` is the one place it bites.
 ## 5. Proposals
 
 Every one is a concrete action, all are refusable, and applying any of them is the
-`tutorail-authoring` skill's job.
+`belay-authoring` skill's job.
 
 **Proposal 1 — ship the CI workflow and delete the boilerplate half of `22:63`.** The one
 toil fix, and now a strictly smaller change than it was on 2026-09-13, because
 `tutorial.yaml:53` already carries a `supplies:` block to append to.
 
 ```
-python3 scripts/supplies.py add /Users/robert/src/github.com/skomp/tutorail-bundles/rust-automaton-db \
+python3 scripts/supplies.py add /Users/robert/src/github.com/skomp/belay-bundles/rust-automaton-db \
   --from ci.yml \
   --to .github/workflows/ci.yml \
   --describe "Baseline CI workflow: cargo build, test, fmt --check and clippy on push and PR. Extend it in this lesson with the fuzz, crash and partition jobs." \
@@ -814,7 +814,7 @@ silently spends an hour on YAML the lesson never admits to assigning (toil that 
 be chargeable), or they stall.
 
 ```
-python3 scripts/supplies.py add /Users/robert/src/github.com/skomp/tutorail-bundles/rust-automaton-db \
+python3 scripts/supplies.py add /Users/robert/src/github.com/skomp/belay-bundles/rust-automaton-db \
   --from docker-compose.yml \
   --to docker-compose.yml \
   --describe "Three-node development cluster. Node identity and advertised address come from environment variables the learner wires up in this lesson." \
@@ -868,7 +868,7 @@ the former, nothing needs to change. If the latter, the cheapest fix is an expla
 at `09:55-:60` — for example "The learner can explain why the composed automaton prunes
 where a prefix scan plus post-filter would not."
 
-**Proposal 8 — `tutorail-authoring#10` is confirmed live against this bundle, with a
+**Proposal 8 — `belay-authoring#10` is confirmed live against this bundle, with a
 measured cost.** `audit.py` reads coverage-list topics from list items only, returned
 `coverage_list.topics == []` for a 45-topic fenced block, and printed prose asserting the
 author "started this section and never filled it in." For this bundle that statement is
@@ -1243,8 +1243,8 @@ rather the exception stopped firing.
 | D8 | The undefined-symbol row's answer is **not** the script's `T`/`E`/`Eq`. Those three are rejected on the author's boundary; `CAS` is reported as bound only in `DESIGN.md`, `WAL` and `FST` as bound nowhere. | **New row, and the hand sort the rubric demands.** The script's candidate rule cannot see plain-prose acronyms. |
 | D9 | Three lessons — 01, 04, 19 — **fail** the closing-action row. | **New row.** Nothing in those lessons changed; the question was not asked in 2026-09-13. |
 | D10 | The coverage block holds **45** topics, not the 46 both the 2026-09-13 report and this audit's brief state. | **Old report wrong** — an off-by-one in a count nothing depended on. Corrected here, and it changes no figure. |
-| D11 | The `audit.py` fenced-coverage-list defect is confirmed still live, now with a measured cost: it would have suppressed the entire −15. | **Nothing changed** — `tutorail-authoring#10` is still open and the script still returns `topics: []`. |
-| D12 | The five unserved coverage topics **persist**, all five, re-verified by grep with positive controls rather than carried over. | **Nothing changed** — `tutorail-bundles#7` is still open. |
+| D11 | The `audit.py` fenced-coverage-list defect is confirmed still live, now with a measured cost: it would have suppressed the entire −15. | **Nothing changed** — `belay-authoring#10` is still open and the script still returns `topics: []`. |
+| D12 | The five unserved coverage topics **persist**, all five, re-verified by grep with positive controls rather than carried over. | **Nothing changed** — `belay-bundles#7` is still open. |
 | D13 | The `cargo-run` validator at `00:4` is **still** declared and **still** invoked by no completion condition. | **Nothing changed.** Re-verified, and now set in the wider pattern at 6.8. |
 | D14 | Lesson sum **370**, penalties **−15**, course total **355**, main-path total **355** — identical to 2026-09-13, re-added element by element rather than carried over. | **Nothing changed in the arithmetic.** The one element whose text moved kept its score, for a reason that had to be re-derived rather than reused. |
 | D15 | Proposal 10 is new (invoke or drop `cargo-run`). Proposal 9 is sharpened: the objective is now *closer* to the rubric's residual hole, not further from it. Proposals 1 and 3 are cheaper, because a `supplies:` block now exists to append to. | **Bundle changed** — `26c0eb9` — and this audit's own reading. |

@@ -1,4 +1,4 @@
-# Course-quality audit, 2026-09-15 — every bundle in `skomp/tutorail-bundles`
+# Course-quality audit, 2026-09-15 — every bundle in `skomp/belay-bundles`
 
 This audit supersedes `2026-09-13-course-quality-all-bundles.md`. It is a fresh run and not
 a patch: the 2026-09-13 reports were amended twice in one day, and a third amendment would
@@ -11,11 +11,11 @@ the validator** and **which YAML reader** produced it. Ten `validate_bundle.py` 
 on the machine that ran this.
 
 ```
-bundles     skomp/tutorail-bundles @ 221c164 (== origin/main, tree clean)
-rubric      skomp/tutorail-authoring @ 86c2bc7, plugin 0.4.0
+bundles     skomp/belay-bundles @ 221c164 (== origin/main, tree clean)
+rubric      skomp/belay-authoring @ 86c2bc7, plugin 0.4.0
 validator   pinned copy of the WHOLE scripts directory from the source checkout
-            skomp/tutorAIl @ 717c575
-yaml reader restricted built-in, ALWAYS — tutorAIl#29 decided at 7419722.
+            skomp/belay @ 717c575
+yaml reader restricted built-in, ALWAYS — belay#29 decided at 7419722.
             PyYAML 6.0.3 was importable and was deliberately not used.
 verdicts    all five bundles: PASS - every applicable check ran and found nothing. exit 0
 ```
@@ -88,7 +88,7 @@ the step at `00:79` was rewritten instead.
 
 ## Two rows answered for the first time
 
-`tutorail-authoring#13` and `#14` added two reader-answered rows. This is their first run.
+`belay-authoring#13` and `#14` added two reader-answered rows. This is their first run.
 
 ### The closing-action row: 7 of 69 lessons fail
 
@@ -101,7 +101,7 @@ the step at `00:79` was rewritten instead.
 | `webgl-typescript-scene` | `18:45` |
 
 **The row reproduced the field report it was written from, without being pointed at it.**
-`tutorail-authoring#13` records a learner saying "there is no call to action in this step"
+`belay-authoring#13` records a learner saying "there is no call to action in this step"
 in the rate limiter's lesson 00, and names the bullet "Define the public contract in prose
 and then as an API signature or stub". The auditor, working from the rubric, failed that
 same bullet.
@@ -140,7 +140,7 @@ reported "clean" would have hidden it.
 
 ## A tooling defect this audit had to work around
 
-`tutorail-authoring#10` is not latent. Running `audit.py --json` against `rust-automaton-db`
+`belay-authoring#10` is not latent. Running `audit.py --json` against `rust-automaton-db`
 returns `coverage_list.topics: []` and states that the author "never filled it in".
 
 `COURSE.md:225-271` holds **45** topics inside a ```` ```text ```` fence.
@@ -163,7 +163,7 @@ The 2026-09-13 report said the fence holds 46 topics. It holds 45. No figure mov
   supplied, which the last audit proposed. It survives only because the objective is a
   three-conjunct conjunction and two conjuncts keep their own servers.
 
-## Still open in `skomp/tutorail-bundles`
+## Still open in `skomp/belay-bundles`
 
 `#3`, `#4`, `#7`, `#8` and `#9`. None changes a lesson. `#5`, `#6` and `#11` were closed by
 the fixes this audit measures, and each was verified from the files rather than from its

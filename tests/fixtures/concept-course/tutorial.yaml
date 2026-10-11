@@ -3,7 +3,7 @@ id: concept-course
 title: A Concept-Phrase and Acronym Fixture
 description: >
   A minimal bundle for the two candidate channels of
-  tutorail-authoring#18. It carries one concept term of each binding kind
+  belay-authoring#18. It carries one concept term of each binding kind
   on purpose - `base offsets` is declared and used and defined nowhere,
   `page cache` is only mentioned in '## Theory', `group commit` has a
   real defining sentence, `edge fade` is declared and never mentioned

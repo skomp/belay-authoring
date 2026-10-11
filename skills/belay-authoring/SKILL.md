@@ -1,6 +1,6 @@
 ---
-name: tutorail-authoring
-description: Create a tutorial, write a course, author a bundle, add a lesson, restructure a course, change a tutorial, renumber lessons, split a chapter, promote a generated lesson, publish a bundle catalogue. Interviews the author about the course, ends the interview with a course spec they approve, and only then builds or changes a tutorAIl tutorial bundle, using a toolkit that keeps tutorial.yaml, lesson ids, design_refs and validator names consistent. Use this when someone wants to WRITE or CHANGE teaching material rather than be taught by it - a new course from nothing, a new lesson in a course that exists, a renamed DESIGN.md anchor, a reordered chapter, a bundle the validator rejects, or a catalog.yaml for a bundles repository. Needs the tutorAIl runner plugin installed, because the toolkit calls its validator.
+name: belay-authoring
+description: Create a tutorial, write a course, author a bundle, add a lesson, restructure a course, change a tutorial, renumber lessons, split a chapter, promote a generated lesson, publish a bundle catalogue. Interviews the author about the course, ends the interview with a course spec they approve, and only then builds or changes a Belay tutorial bundle, using a toolkit that keeps tutorial.yaml, lesson ids, design_refs and validator names consistent. Use this when someone wants to WRITE or CHANGE teaching material rather than be taught by it - a new course from nothing, a new lesson in a course that exists, a renamed DESIGN.md anchor, a reordered chapter, a bundle the validator rejects, or a catalog.yaml for a bundles repository. Needs the Belay runner plugin installed, because the toolkit calls its validator.
 ---
 
 # Bundle authoring
@@ -45,9 +45,9 @@ hand a file over, and the manifest forbade the tutor to place it, so a task was 
 channel left. The learner learned nothing from the five copies. `supplies:` is that
 missing channel, and it is the only place this kind of work belongs.
 
-## This plugin depends on the tutorAIl runner
+## This plugin depends on the Belay runner
 
-`validate_bundle.py` lives in the **tutorAIl runner plugin** and is not duplicated here.
+`validate_bundle.py` lives in the **Belay runner plugin** and is not duplicated here.
 Every mutating script calls it. If a script reports that it cannot find the validator, the
 repair is to install the runner plugin — say so plainly rather than carrying on unvalidated
 or writing a second validator. A second validator that disagrees with the first is worse
@@ -199,7 +199,7 @@ The bundle format lives in the runner plugin, which is installed separately, so 
 differs by host and by install method. Do not guess it. Ask for it:
 
 ```
-python3 skills/tutorail-authoring/scripts/runner.py --bundle-format
+python3 skills/belay-authoring/scripts/runner.py --bundle-format
 ```
 
 That prints the contract's absolute path, or explains how to install the runner and prints

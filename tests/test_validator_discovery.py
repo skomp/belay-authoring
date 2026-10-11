@@ -20,7 +20,7 @@ a typo in the argv, a bad fixture or an unrelated bug fails identically.
 
 `harness.no_runner_env` is the hiding mechanism: HOME is redirected at an
 empty directory, so search locations 2, 3 and 4 all resolve under it and
-miss, and $TUTORAIL_VALIDATOR is unset so location 1 does not answer either.
+miss, and $BELAY_VALIDATOR is unset so location 1 does not answer either.
 bundlelib uses os.path.expanduser, which reads HOME, so this exercises the
 same code path a machine without the runner installed would.
 """
@@ -58,10 +58,10 @@ import bundlelib as bl  # noqa: E402  (harness put the scripts dir on sys.path)
 # the runner in ~/.agents and a stale copy in a plugin cache needs to know
 # which one answered.
 SEARCH_LOCATIONS = (
-    "1. $TUTORAIL_VALIDATOR",
-    "2. ~/.agents/skills/tutorail/scripts/validate_bundle.py",
-    "3. ~/.claude/skills/tutorail/scripts/validate_bundle.py",
-    "4. the newest ~/.claude/plugins/**/tutorail/**/scripts/validate_bundle.py",
+    "1. $BELAY_VALIDATOR",
+    "2. ~/.agents/skills/belay/scripts/validate_bundle.py",
+    "3. ~/.claude/skills/belay/scripts/validate_bundle.py",
+    "4. the newest ~/.claude/plugins/**/belay/**/scripts/validate_bundle.py",
 )
 
 ADDED = "23-extra-topic.md"
@@ -103,12 +103,12 @@ def needs_renumber(bundle: Path) -> None:
 
 def install_message_is_complete(output: str, label: str) -> None:
     check_in(
-        "The tutorAIl runner is not installed",
+        "The Belay runner is not installed",
         output,
         f"{label}: the message says the runner is not installed",
     )
     check_in(
-        "Install the runner plugin (skomp/tutorAIl)",
+        "Install the runner plugin (skomp/belay)",
         output,
         f"{label}: the message says how to install it",
     )
@@ -216,7 +216,7 @@ def main() -> int:
                     f"(got {done.returncode}: {done.output.strip()[-300:]})",
                 )
                 check_not_in(
-                    "The tutorAIl runner is not installed",
+                    "The Belay runner is not installed",
                     done.output,
                     f"{label}: no install message when the runner is there",
                 )
@@ -235,7 +235,7 @@ def main() -> int:
                     f"{label}: the run names the validator it used",
                 )
 
-    with case("3  $TUTORAIL_VALIDATOR pointing at something that is not a file"):
+    with case("3  $BELAY_VALIDATOR pointing at something that is not a file"):
         with Workspace() as ws:
             bundle = ws.copy("rust-automaton-db", "bundle")
             missing = ws.path("nowhere", "validate_bundle.py")
@@ -248,11 +248,11 @@ def main() -> int:
                 "extra-topic",
                 "--title",
                 "Extra topic",
-                env={"TUTORAIL_VALIDATOR": str(missing)},
+                env={"BELAY_VALIDATOR": str(missing)},
             )
             check(done.returncode != 0, f"non-zero exit (got {done.returncode})")
             check_in(
-                "$TUTORAIL_VALIDATOR is set to",
+                "$BELAY_VALIDATOR is set to",
                 done.output,
                 "the error names the environment variable",
             )
@@ -290,7 +290,7 @@ def main() -> int:
                 "extra-topic",
                 "--title",
                 "Extra topic",
-                env={"TUTORAIL_VALIDATOR": str(ws.root)},
+                env={"BELAY_VALIDATOR": str(ws.root)},
             )
             check(
                 done_dir.returncode != 0,
@@ -306,7 +306,7 @@ def main() -> int:
                 "the bundle is byte-identical after the directory case too",
             )
 
-    with case("4  $TUTORAIL_VALIDATOR pointing at a REAL validator somewhere else"):
+    with case("4  $BELAY_VALIDATOR pointing at a REAL validator somewhere else"):
         with Workspace() as ws:
             # Location 1 is the only one that can point outside the two
             # installed layouts, and it is the one a checkout uses. Proving it
@@ -339,7 +339,7 @@ def main() -> int:
                 "extra-topic",
                 "--title",
                 "Extra topic",
-                env={"TUTORAIL_VALIDATOR": str(alt)},
+                env={"BELAY_VALIDATOR": str(alt)},
             )
             check(
                 done.returncode == 0,
@@ -352,7 +352,7 @@ def main() -> int:
                 "the output names the validator it actually used, by path",
             )
             check_in(
-                "($TUTORAIL_VALIDATOR)",
+                "($BELAY_VALIDATOR)",
                 done.output,
                 "the output says WHICH search location answered",
             )
@@ -371,15 +371,15 @@ def main() -> int:
         with Workspace() as ws:
             home = ws.path("home")
             agents = stub_at(
-                home / ".agents/skills/tutorail/scripts/validate_bundle.py", "agents"
+                home / ".agents/skills/belay/scripts/validate_bundle.py", "agents"
             )
             claude_skills = stub_at(
-                home / ".claude/skills/tutorail/scripts/validate_bundle.py",
+                home / ".claude/skills/belay/scripts/validate_bundle.py",
                 "claude-skills",
             )
             plugins = stub_at(
                 home
-                / ".claude/plugins/cache/acme/tutorail/skills/tutorail/scripts"
+                / ".claude/plugins/cache/acme/belay/skills/belay/scripts"
                 / "validate_bundle.py",
                 "plugins",
             )
@@ -403,7 +403,7 @@ def main() -> int:
                     f"topic-{step}",
                     "--title",
                     "Topic",
-                    env={"HOME": str(home), "TUTORAIL_VALIDATOR": None},
+                    env={"HOME": str(home), "BELAY_VALIDATOR": None},
                 )
                 check(
                     done.returncode == 0,
@@ -413,7 +413,7 @@ def main() -> int:
                 locator = run(
                     RUNNER,
                     "--validator",
-                    env={"HOME": str(home), "TUTORAIL_VALIDATOR": None},
+                    env={"HOME": str(home), "BELAY_VALIDATOR": None},
                 )
                 check(
                     locator.returncode == 0,
@@ -463,7 +463,7 @@ def main() -> int:
             # above could be reporting something other than the search.
             os.remove(plugins)
             locator = run(
-                RUNNER, "--validator", env={"HOME": str(home), "TUTORAIL_VALIDATOR": None}
+                RUNNER, "--validator", env={"HOME": str(home), "BELAY_VALIDATOR": None}
             )
             check(
                 locator.returncode != 0,

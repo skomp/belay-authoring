@@ -1,7 +1,7 @@
 # Course quality: `pico-ps2-usb-adapter`
 
 **Date:** 2026-09-29
-**Bundle:** `skomp/tutorail-bundles`, `pico-ps2-usb-adapter`, on branch
+**Bundle:** `skomp/belay-bundles`, `pico-ps2-usb-adapter`, on branch
 `worktree-pico-ps2-usb-adapter` (local; not pushed at the time of this audit)
 **Auditor:** a Claude session, using the `course-quality` skill and the rubric at
 `skills/course-quality/references/rubric.md`
@@ -214,7 +214,7 @@ from opening all twenty-six lessons, not from the four lines the verb patterns c
 ## 5. Proposals
 
 Every one of these is a proposal the author may refuse. Applying any of them goes back
-through the `tutorail-authoring` skill and its toolkit.
+through the `belay-authoring` skill and its toolkit.
 
 ### 5.1 The `CMakeLists.txt` charge, and the author's counter-argument
 
