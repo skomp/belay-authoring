@@ -1055,7 +1055,7 @@ def emit_scalar(value: str) -> str:
     POST-CONDITION. Whatever form is returned, `value: <form>` parsed with
     yamlite gives back exactly `value` as a str. If the quoted fallback does
     not (yamlite strips a comment before it honours an escaped quote, so
-    `she said "x" # y` fails to read), a ToolError is raised: the toolkit
+    `say "hi # there` fails to read; belay#57), a ToolError is raised: the toolkit
     must not write a file it cannot read back. A control or line-separator
     character is refused the same way.
     """
