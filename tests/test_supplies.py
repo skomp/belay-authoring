@@ -1104,6 +1104,87 @@ def cli_case_repair_indeterminate_is_refused() -> None:
         check(result.returncode == 0, "repair/indeterminate control: both runs exit 1 -> accepted")
 
 
+STUB_BLOCKED = """#!/usr/bin/env python3
+import sys
+from pathlib import Path
+root = Path(sys.argv[-1])
+text = (root / "lessons" / "00-foundations" / "LESSON.md").read_text()
+edited = "supplies:" in text
+here = Path(__file__).parent
+warn = (here / ("after_warn" if edited else "before_warn")).read_text()
+print("Belay validator - mode: bundle")
+print("FAIL - 1 finding(s):" if edited else "FAIL - 2 finding(s):")
+print("  [check  6] lessons/00-foundations/LESSON.md -> b.txt: x")
+if not edited:
+    print("  [check  6] lessons/00-foundations/LESSON.md -> a.txt: x")
+if warn:
+    print("")
+    print(warn)
+sys.exit(1)
+"""
+
+
+def blocked_line(*numbers: int) -> str:
+    return (
+        f"WARNING - {len(numbers)} check(s) did not run: "
+        f"{', '.join(str(n) for n in numbers)}. This result does not certify them."
+    )
+
+
+def run_blocked_stub(before_warn: str, after_warn: str):
+    """Returns (result, bundle, digest_before, workspace-closing digest fn)."""
+    with Workspace() as ws:
+        bundle = undeclared_bundle(ws, ("a.txt",))
+        stub = ws.root / "stub_validate_bundle.py"
+        stub.write_text(STUB_BLOCKED, encoding="utf-8")
+        (ws.root / "before_warn").write_text(before_warn)
+        (ws.root / "after_warn").write_text(after_warn)
+        before = h.tree_digest(bundle)
+        result = lesson_add(bundle, "a.txt", env={"BELAY_VALIDATOR": str(stub)})
+        return result, h.tree_digest(bundle) == before
+
+
+def cli_case_repair_blocked_checks() -> None:
+    # (a) an edit that blocks check 7: its findings would vanish as "removed".
+    result, same = run_blocked_stub("", blocked_line(7))
+    check(result.returncode != 0, "repair/blocked (a): refused")
+    check_in("check(s) 7 did not run", result.output, "repair/blocked (a): names check 7")
+    check_in("Nothing was written", result.output, "repair/blocked (a): says nothing was written")
+    check(same, "repair/blocked (a): the bundle is byte-identical")
+    # A check that was already blocked before the edit does not count against it.
+    result, same = run_blocked_stub(blocked_line(7), blocked_line(7))
+    check(result.returncode == 0, "repair/blocked (b): same blocked set before and after -> accepted")
+    check_in("1 check(s) did not run: 7", result.output, "repair/blocked (b): the report says which checks did not run")
+    check_in("STILL INVALID", result.output, "repair/blocked (b): still reported as invalid")
+    check(not same, "repair/blocked (b): the edit was written")
+    # A narrower blocked set after the edit is also fine.
+    result, _ = run_blocked_stub(blocked_line(3, 7), blocked_line(7))
+    check(result.returncode == 0, "repair/blocked (b'): a smaller blocked set -> accepted")
+    # (c) a WARNING line that cannot be read back to the N it declares.
+    for label, bad in (
+        ("count mismatch", "WARNING - 2 check(s) did not run: 7. This result does not certify them."),
+        ("not numbers", "WARNING - 1 check(s) did not run: seven. This result does not certify them."),
+        ("garbled tail", "WARNING - 1 check(s) did not run: 7"),
+    ):
+        result, same = run_blocked_stub("", bad)
+        check(result.returncode != 0, f"repair/blocked (c, {label}): refused")
+        check_in("could not be read back", result.output, f"repair/blocked (c, {label}): says it is unreadable")
+        check(same, f"repair/blocked (c, {label}): byte-identical")
+    # Control: no WARNING line at all is the empty set, not unreadable.
+    result, _ = run_blocked_stub("", "")
+    check(result.returncode == 0, "repair/blocked control: no WARNING line -> accepted")
+
+
+def test_blocked_parses_the_warning_line() -> None:
+    def parse(text):
+        return bl.ValidatorRun(Path("v"), "t", 1, text, "").blocked()
+    check(parse("FAIL - 0 finding(s):\n") == (set(), True), "blocked(): no line is the empty set")
+    check(parse(blocked_line(3, 7)) == ({3, 7}, True), "blocked(): reads two numbers")
+    check(parse(blocked_line(7) + "\n")[1] is True, "blocked(): a trailing newline is fine")
+    check(parse("WARNING - 2 check(s) did not run: 7, 7. This result does not certify them.")[1] is False,
+          "blocked(): a repeated number is unreadable")
+
+
 def test_failures_excludes_warnings_and_joins_continuations() -> None:
     out = (
         "Belay validator - mode: bundle\n\n"
@@ -1258,6 +1339,10 @@ def main() -> int:
         cli_case_repair_check_mode()
     with case("repair: a validator run that did not complete is never accepted"):
         cli_case_repair_indeterminate_is_refused()
+    with case("blocked() reads the checks that did not run"):
+        test_blocked_parses_the_warning_line()
+    with case("repair: an edit that blocks a check is never accepted"):
+        cli_case_repair_blocked_checks()
 
     return report("test_supplies.py")
 

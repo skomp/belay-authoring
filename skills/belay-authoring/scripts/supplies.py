@@ -218,6 +218,12 @@ def _report_validator(
             f"written. This edit removed {removed} finding(s); {left} remain, and "
             f"the bundle is still invalid."
         )
+    if repair.not_run:
+        print(
+            f"           {len(repair.not_run)} check(s) did not run: "
+            f"{', '.join(str(n) for n in repair.not_run)}. "
+            f"This result does not certify them."
+        )
     print("remaining findings:")
     print("\n".join(f"    {line}" for line in repair.remaining[:25]))
     if left > 25:

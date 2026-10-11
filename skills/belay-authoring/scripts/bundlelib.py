@@ -515,6 +515,11 @@ def find_runner_reference(name: str, env: dict[str, str] | None = None) -> tuple
 
 _FINDING_RE = re.compile(r"^\s*\[check\s+(\d+)\]\s*(.*)$")
 _FAIL_HEADER_RE = re.compile(r"^FAIL - (\d+) finding\(s\):\s*$")
+# The validator exits 1 on any finding even when some checks did not run, and
+# says so on one line: "WARNING - N check(s) did not run: 3, 7. This result ...".
+_BLOCKED_RE = re.compile(
+    r"^WARNING - (\d+) check\(s\) did not run:\s*(.*?)\.\s+This result does not certify them\.\s*$"
+)
 
 # Two finding shapes carry a line number, and an edit that inserts lines
 # moves it. Measured against the runner's validator: a check 5 finding is
@@ -595,6 +600,28 @@ class ValidatorRun:
             elif line.strip() and entries:
                 entries[-1] += "\n" + line.strip()
         return entries, len(entries) == declared
+
+    def blocked(self) -> tuple[set[int], bool]:
+        """The check numbers that did not run, as (numbers, readable).
+
+        No WARNING line means none were blocked. A line that is there but does
+        not parse to exactly the N numbers it declares is unreadable, and the
+        caller must refuse: a set it cannot reproduce must not be compared.
+        """
+        for line in self.stdout.splitlines():
+            if not line.startswith("WARNING - ") or "did not run" not in line:
+                continue
+            match = _BLOCKED_RE.match(line)
+            if not match:
+                return set(), False
+            parts = [s.strip() for s in match.group(2).split(",")]
+            if not all(s.isdigit() for s in parts):
+                return set(), False
+            numbers = {int(s) for s in parts}
+            if len(parts) != int(match.group(1)) or len(numbers) != len(parts):
+                return set(), False
+            return numbers, True
+        return set(), True
 
     def summary(self) -> str:
         if self.returncode == 0:
@@ -709,6 +736,7 @@ class Repair:
     removed: list[str]
     remaining: list[str]
     before: int
+    not_run: tuple[int, ...] = ()
 
 
 def _cap(lines: list[str]) -> str:
@@ -817,6 +845,26 @@ class Staged:
                 f"they cannot be compared. {nothing}\n\n"
                 f"Run it yourself: python3 {run.validator} {self.bundle}"
             )
+        # A check that stopped running takes its findings with it; they would
+        # read as "removed". Refuse when the edit blocked a check.
+        base_blocked, base_ok = base.blocked()
+        run_blocked, run_ok = run.blocked()
+        if not (base_ok and run_ok):
+            raise ToolError(
+                f"the validator's list of checks that did not run could not be "
+                f"read back ({'before' if not base_ok else 'after'} this edit), "
+                f"so the findings cannot be compared. {nothing}\n\n"
+                f"Run it yourself: python3 {run.validator} {self.bundle}"
+            )
+        stopped = sorted(run_blocked - base_blocked)
+        if stopped:
+            names = ", ".join(str(n) for n in stopped)
+            raise ToolError(
+                f"after this edit check(s) {names} did not run, and they did "
+                f"before it. Their findings, if any, would vanish from the "
+                f"report without being fixed, so the edit was refused. {nothing}\n\n"
+                f"Run it yourself: python3 {run.validator} {self.bundle}"
+            )
         # Multisets of normalised findings. Display strings stay the raw ones.
         have = Counter(finding_key(f) for f in before)
         now = Counter(finding_key(f) for f in after)
@@ -841,7 +889,12 @@ class Staged:
                 f"Fix the existing findings first: "
                 f"python3 {run.validator} {self.bundle}"
             )
-        return Repair(removed=removed, remaining=after, before=len(before))
+        return Repair(
+            removed=removed,
+            remaining=after,
+            before=len(before),
+            not_run=tuple(sorted(run_blocked)),
+        )
 
     def commit(self) -> ValidatorRun:
         """Validate the staged copy, then swap it in. Raises on any failure."""
