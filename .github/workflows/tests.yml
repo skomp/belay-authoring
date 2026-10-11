@@ -185,7 +185,7 @@ jobs:
           # the bump procedure there.
           # skomp/belay main @ 2026-09-16: "Design the disclosure block's
           # derivation, and drop section 10".
-          ref: f612ddc866d712ad7c259dfff97726e0625053e7
+          ref: bc76614450240cd334ce0cee5b6f401ed82a49de
           path: runner-pin
 
       - name: Set up Python
