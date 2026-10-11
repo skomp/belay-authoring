@@ -43,10 +43,8 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
-import json
 import re
 import sys
-import unicodedata
 from pathlib import Path
 
 try:
@@ -54,53 +52,6 @@ try:
 except ImportError:  # pragma: no cover
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import bundlelib as bl
-
-
-# --------------------------------------------------------------------------
-# Writing the title (belay-authoring#26)
-#
-# The title is free text from the author, so it goes through the project's
-# one quoting rule, bundlelib.emit_scalar. emit_scalar is measured against
-# yamlite only, and PyYAML (YAML 1.1) retypes a few plain scalars that yamlite
-# keeps as text: `Yes`, `On`, `0x1f`, `2026-09-12`, `1:30`, `.inf`. A lesson
-# file is read by tools other than this one, so a title is left unquoted only
-# when it is plainly prose: it opens with a letter and is not a YAML 1.1
-# boolean word. Every other title the tool writes is double-quoted, which is
-# valid everywhere. This is a narrowing of emit_scalar's "plain" answer, not a
-# second quoting rule for the double-quoted form.
-# --------------------------------------------------------------------------
-
-_YAML11_WORDS = {"y", "n", "yes", "no", "on", "off", "true", "false", "null"}
-
-
-def check_title(title: str) -> None:
-    """Refuse a title no parser can hold on one line, before anything is written.
-
-    A tab, a newline and a carriage return are escaped inside the quotes and
-    read back exactly. Any other control character, and the Unicode line and
-    paragraph separators, are line breaks or non-printable to a conforming
-    parser even inside quotes, so there is no safe way to write them.
-    """
-    for ch in title:
-        if ch in "\t\n\r":
-            continue
-        if unicodedata.category(ch) in ("Cc", "Zl", "Zp"):
-            raise bl.ToolError(
-                f"--title contains the character U+{ord(ch):04X}, which cannot "
-                f"be written safely on one line of YAML frontmatter. Remove it. "
-                f"Nothing was written."
-            )
-
-
-def title_scalar(title: str) -> str:
-    """The YAML scalar for a title: both yamlite and PyYAML read it back as `title`."""
-    emitted = bl.emit_scalar(title)
-    if emitted.startswith('"'):
-        return emitted
-    if title[:1].isalpha() and title.lower() not in _YAML11_WORDS:
-        return emitted
-    return json.dumps(title, ensure_ascii=False)
-
 
 
 # --------------------------------------------------------------------------
@@ -267,7 +218,12 @@ def add(args: argparse.Namespace) -> int:
     root = Path(args.bundle)
     bundle = bl.load_bundle(root)
     bl.require_clean_tree(root, args.force)
-    check_title(args.title)
+    # Refuse a title that cannot be written BEFORE the plan is printed or
+    # anything is staged. The same emit_scalar call fills the template later.
+    try:
+        bl.emit_scalar(args.title)
+    except bl.ToolError as exc:
+        raise bl.ToolError(f"--title: {exc}") from None
 
     given = args.id.strip()
     prefix, body = bl.split_number_prefix(given)
@@ -394,7 +350,7 @@ def add_optional(
     with bl.Staged(root, check_only=args.check) as stage:
         target = stage.root / rel
         target.parent.mkdir(parents=True, exist_ok=True)
-        text = TEMPLATE.format(slug=slug, title=title_scalar(args.title))
+        text = TEMPLATE.format(slug=slug, title=bl.emit_scalar(args.title))
         # Write 1 and 2 are one file write. Check 20 requires the frontmatter
         # and the optional_lessons list to agree, so they are never apart.
         text, changed = bl.set_frontmatter_field(text, "optional", "true")
@@ -476,7 +432,7 @@ def add_main_path(
         target = stage.root / rel
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(
-            TEMPLATE.format(slug=slug, title=title_scalar(args.title)),
+            TEMPLATE.format(slug=slug, title=bl.emit_scalar(args.title)),
             encoding="utf-8",
         )
         manifest_path = stage.root / "tutorial.yaml"

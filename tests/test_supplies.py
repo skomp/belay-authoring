@@ -441,6 +441,22 @@ def cli_case_describe_round_trips() -> None:
                 check(got == value, f"describe {value!r}: PyYAML reads {got!r}")
 
 
+def cli_case_describe_unwritable() -> None:
+    """A --describe emit_scalar cannot write is refused cleanly: non-zero,
+    names the value, tree byte-identical. (belay#57: yamlite cannot read it.)"""
+    with Workspace() as ws:
+        bundle = ws.copy("rust-automaton-db")
+        (bundle / "supplies").mkdir()
+        (bundle / "supplies" / "a.txt").write_text("a\n", encoding="utf-8")
+        h.git_init(bundle)
+        before = h.tree_digest(bundle)
+        out = add_cmd(bundle, "--from", "supplies/a.txt", "--to", "safe/a.txt",
+                      "--describe", 'say "hi # there')
+        check(out.returncode != 0, "an unwritable --describe exits non-zero")
+        check_in("cannot be written", out.output, "and says why")
+        check(h.tree_digest(bundle) == before, "and the bundle is byte-identical")
+
+
 def cli_case_to_escapes() -> None:
     with Workspace() as ws:
         bundle = ws.copy("rust-automaton-db")
@@ -904,6 +920,8 @@ def main() -> int:
         cli_case_from_missing()
     with case("add --describe round-trips free text by value"):
         cli_case_describe_round_trips()
+    with case("add refuses a --describe it cannot write, and writes nothing"):
+        cli_case_describe_unwritable()
     with case("add refuses a --to that escapes the workspace"):
         cli_case_to_escapes()
     with case("add refuses a --to that begins with tutorial/"):

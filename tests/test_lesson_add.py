@@ -1832,11 +1832,14 @@ TITLES = [
     "1:30",
     ".inf",
     "tab\there",
+    "N'? # 1",
+    'she said "x" # y',
 ]
 
 # What the tool must refuse rather than write: characters a conforming parser
 # reads as a line break or rejects as non-printable, even inside quotes.
-REFUSED_TITLES = ["bell\x07 here", "line" + chr(0x2028) + "separator", "next" + chr(0x85) + "line"]
+# `say "hi # there` is refused because yamlite (belay#57) cannot read it back.
+REFUSED_TITLES = ['say "hi # there', "bell\x07 here", "line" + chr(0x2028) + "separator", "next" + chr(0x85) + "line"]
 
 
 def pyyaml_title(path: Path):
@@ -1945,6 +1948,19 @@ def case_title_refused() -> None:
         )
 
 
+def case_offer_because_unwritable() -> None:
+    """An --offer-because emit_scalar cannot write is refused, nothing written."""
+    with Workspace() as ws:
+        bundle = ws.copy("rust-automaton-db", "b")
+        git_init(bundle)
+        refusal(
+            "unwritable --offer-because", bundle,
+            ("--id", "borrow-detour", "--title", "A borrow detour", "--optional",
+             "--offer-at", OFFER_AT, "--offer-because", 'say "hi # there'),
+            "cannot be written",
+        )
+
+
 def case_offer_because_round_trips() -> None:
     """--offer-because is free text and goes through emit_scalar. Measured for
     belay-authoring#26: it already round-trips by value, so this pins that and
@@ -2048,6 +2064,8 @@ def main() -> int:
     with case("F28 a title no parser can hold is refused, nothing written"):
         case_title_refused()
 
+    with case("F29b an --offer-because that cannot be written is refused cleanly"):
+        case_offer_because_unwritable()
     with case("F29 --offer-because round-trips free text by value"):
         case_offer_because_round_trips()
 
