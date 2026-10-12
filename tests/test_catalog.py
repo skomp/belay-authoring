@@ -705,7 +705,7 @@ def case_scalars_round_trip_in_both_readers() -> None:
 
 
 def case_flow_list_keeps_neighbours_intact() -> None:
-    """The reason emit_flow_scalar exists: a comma inside an item must not turn
+    """The reason emit_flow_list exists: a comma inside an item must not turn
     one item into two, and a bracket must not end the list early. Checked with
     two items so a split shows as a changed LENGTH, not just changed text."""
     with Workspace() as ws:
@@ -774,13 +774,49 @@ def case_refused_field_stops_the_run() -> None:
         check_in("2 bundle(s)", done.output, "control: two bundles were written")
 
 
+def case_each_item_fine_but_the_line_is_not() -> None:
+    """Each item reads back alone, yet yamlite cannot read the whole line: an
+    escaped quote in item 1 leaves its comment stripper in a quote state, so
+    the ' #' in item 3 looks like a comment (belay#57). catalog.py must refuse
+    the list, naming bundle and field, and write nothing."""
+    # The reviewer's list ['yes- ": 0.5+=', 'b', ' #yes #null'] cannot be used
+    # here: yamlite cannot read it out of a MANIFEST (it takes the quoted
+    # item for a mapping key), so catalog.py never receives it. This list has
+    # the same shape - an escaped quote, then ' #' in a later item - and a
+    # manifest yamlite reads. The reviewer's list is asserted refused in
+    # test_emit_scalar.py.
+    values = ['a"b', "c", " #d"]
+    for value in values:  # POSITIVE CONTROL: every item alone is writable.
+        check(bl.emit_flow_list([value], key="subjects").startswith("["), f"control: {value!r} alone is writable")
+    with Workspace() as ws:
+        repo = ws.path("repo")
+        repo.mkdir()
+        bundle = make_bundle(repo, "comment-probe", 3)
+        edit(bundle / "tutorial.yaml", "subjects: [fixtures, testing]",
+             "subjects:\n" + "".join(f"  - {_yaml_quoted(v)}\n" for v in values).rstrip("\n"))
+        check(bl.load_manifest(bundle)[0].get("subjects") == values, "fixture: the manifest reads back the three subjects")
+        before = h.tree_digest(repo)
+        for extra in ((), ("-o", "-")):
+            done = run(CATALOG, repo, *extra)
+            check(done.returncode == 2, f"{extra}: exit code 2 (got {done.returncode})")
+            check(done.stdout == "", f"{extra}: nothing on stdout")
+            check_in("comment-probe", done.stderr, f"{extra}: the error names the bundle")
+            check_in("'subjects'", done.stderr, f"{extra}: the error names the field")
+        check(h.tree_digest(repo) == before, "nothing was written (byte-identical tree)")
+        check(not has_exactly(repo, "catalog.yaml"), "no catalog.yaml exists")
+        # POSITIVE CONTROL: the same bundle with two of the three items is written.
+        edit(bundle / "tutorial.yaml", f"  - {_yaml_quoted(values[2])}", "  - fine")
+        done = run(CATALOG, repo)
+        check(done.returncode == 0, f"control: without the third item it is catalogued ({done.stderr[-200:]!r})")
+
+
 def case_no_private_quoting_rule() -> None:
     """catalog.py carries no scalar-quoting rule: no yaml_scalar, and no
     hand-built quote around a value."""
     source = (Path(catalog.__file__)).read_text(encoding="utf-8")
     check(not hasattr(catalog, "yaml_scalar"), "catalog has no yaml_scalar")
     check("replace(" not in source or 'replace(\'"\'' not in source, "catalog.py does not escape quotes itself")
-    check("emit_scalar" in source and "emit_flow_scalar" in source and "emit_quoted_scalar" in source,
+    check("emit_scalar" in source and "emit_flow_list" in source and "emit_quoted_scalar" in source,
           "catalog.py writes through bundlelib's emitters")
 
 
@@ -813,6 +849,8 @@ def main() -> int:
         case_flow_list_keeps_neighbours_intact()
     with case("belay-authoring#33: a field emit_scalar refuses stops the run"):
         case_refused_field_stops_the_run()
+    with case("belay-authoring#33: items that read back alone but not as one line are refused"):
+        case_each_item_fine_but_the_line_is_not()
     with case("belay-authoring#33: catalog.py has no quoting rule of its own"):
         case_no_private_quoting_rule()
     return report("catalog.py")

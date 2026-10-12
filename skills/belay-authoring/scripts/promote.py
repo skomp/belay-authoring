@@ -366,6 +366,9 @@ def promote_optional(
     source_text: str,
 ) -> int:
     entry = derive_offer(frontmatter, bundle, source_rel)
+    # After the value checks in derive_offer: the clean-tree note is output,
+    # and a refusal must be the first line the operator reads.
+    bl.require_clean_tree(bundle_root, args.force)
     slug = body_slug_of(frontmatter, source, source_rel)
     rel = f"lessons/{slug}.md"
     refuse_slug_clash(bundle, bundle_root, slug, slug, rel)
@@ -470,7 +473,8 @@ def promote(args: argparse.Namespace) -> int:
     source, source_rel = resolve_generated(instance, args.generated)
     frontmatter, source_text = read_lesson(source)
     bundle = bl.load_bundle(bundle_root)
-    bl.require_clean_tree(bundle_root, args.force)
+    if not args.optional:
+        bl.require_clean_tree(bundle_root, args.force)
 
     if args.optional:
         return promote_optional(

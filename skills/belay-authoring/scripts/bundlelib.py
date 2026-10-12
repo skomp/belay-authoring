@@ -72,7 +72,7 @@ __all__ = [
     "set_frontmatter_field",
     "emit_scalar",
     "emit_quoted_scalar",
-    "emit_flow_scalar",
+    "emit_flow_list",
     "refuse_unwritable",
     "render_supplies_item",
     "add_supplies",
@@ -1366,26 +1366,57 @@ def emit_quoted_scalar(value: str) -> str:
 _FLOW_PLAIN_RE = re.compile(r"[^\W_][\w .+/-]*\Z")
 
 
-def emit_flow_scalar(value: str) -> str:
-    """A scalar for use as an item of a flow sequence, `[item, item]`.
-
-    emit_scalar decides first, so a value it refuses is refused here too and a
-    value it quotes stays quoted. A value it would leave plain stays plain only
-    when it matches _FLOW_PLAIN_RE; otherwise the double-quoted form is used.
-    The result is parsed back as `[<form>]` with load_yaml, and ToolError is
-    raised unless the list holds exactly `[value]`.
-    """
+def _flow_item(value: str) -> str:
+    """One item of a flow sequence: emit_scalar's decision, with the plain form
+    kept only when _FLOW_PLAIN_RE says both readers read it as one item. NOT
+    a guarantee about a whole list - see emit_flow_list, which is the only
+    public way to write one."""
     form = emit_scalar(value)
     if form == value and not _FLOW_PLAIN_RE.match(value):
         form = _double_quoted(value)
-    if not _reads_back(
-        f"value: [{form}]\n", lambda doc: doc.get("value"), [value]
-    ):
-        raise ToolError(
-            f"the value {value!r} cannot be written as an item of a flow "
-            f"sequence in a form this toolkit can read back. Nothing was written."
-        )
     return form
+
+
+def emit_flow_list(values: list, key: str = "value") -> str:
+    """The flow sequence `[a, b, c]` for `values`, read back as a WHOLE.
+
+    The unit that is checked is the unit that is written. Each item alone can
+    read back and the line still not: yamlite's comment stripping
+    (`_strip_comment`, belay#57) keeps one quote state across the line, so an
+    escaped quote in one item makes a ' #' in a LATER item look like a comment
+    - `["a\\": b", c, " #d"]` is unreadable although every item passes alone.
+    So the exact text returned here is parsed with load_yaml, both as
+    `<key>: <text>` and nested one level (`top:` / `  <key>: <text>`), and
+    ToolError is raised unless both give exactly `values`. Measured: moving
+    the key or indenting the line did not change any verdict (209 of 6000
+    random lists unreadable in each form, the same lists), but both forms are
+    checked so that remains true by construction.
+
+    Every value must be a str; a value emit_scalar refuses is refused here.
+    """
+    if not isinstance(values, list) or not all(isinstance(v, str) for v in values):
+        raise ToolError(f"a flow list needs a list of strings, got {values!r}")
+    text = "[" + ", ".join(_flow_item(v) for v in values) + "]"
+    for document in (f"{key}: {text}\n", f"top:\n  {key}: {text}\n"):
+        try:
+            parsed = load_yaml(document, "emit_flow_list probe")
+        except YamlError:
+            parsed = None
+        if isinstance(parsed, dict) and "top" in parsed:
+            parsed = parsed["top"]
+        got = parsed.get(key) if isinstance(parsed, dict) else None
+        if not (
+            isinstance(got, list)
+            and len(got) == len(values)
+            and all(isinstance(g, str) for g in got)
+            and got == values
+        ):
+            raise ToolError(
+                f"the list {values!r} cannot be written as one flow sequence "
+                f"in a form this toolkit can read back as a whole. Nothing "
+                f"was written."
+            )
+    return text
 
 
 def refuse_unwritable(label: str, value: str) -> None:

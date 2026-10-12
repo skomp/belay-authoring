@@ -217,9 +217,11 @@ def add(args: argparse.Namespace) -> int:
     bl.find_validator()
     root = Path(args.bundle)
     bundle = bl.load_bundle(root)
-    bl.require_clean_tree(root, args.force)
     # Refuse a title that cannot be written BEFORE the plan is printed or
     # anything is staged. The same emit_scalar call fills the template later.
+    # require_clean_tree runs after every refusal, just before the plan: its
+    # "not inside a git repository" note is output, and the refusal has to be
+    # the first line the operator reads.
     try:
         bl.emit_scalar(args.title)
     except bl.ToolError as exc:
@@ -339,6 +341,7 @@ def add_optional(
     if "repair_in" in entry:
         bl.refuse_unwritable("--repair-in", entry["repair_in"])
 
+    bl.require_clean_tree(root, args.force)
     print(f"add: {rel}   OPTIONAL - offered, not sequenced")
     print(f"     id      {slug}")
     print(f"     title   {args.title}")
@@ -427,6 +430,7 @@ def add_main_path(
     # is more honest than silently renaming 20 files inside an `add`.
     prefixes_out_of_sequence = position != len(bundle.listed)
 
+    bl.require_clean_tree(root, args.force)
     print(f"add: {rel}")
     print(f"     id      {slug}")
     print(f"     title   {args.title}")

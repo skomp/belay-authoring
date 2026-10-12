@@ -502,6 +502,24 @@ def cli_case_refusal_comes_before_the_plan() -> None:
         check(ok.stdout.startswith("add: supplies entry"), "refusal-first control: the plan is printed first")
 
 
+def cli_case_refusal_first_outside_git() -> None:
+    """The same property in a bundle that is NOT in a git repository, where
+    require_clean_tree prints a note. The refusal must still be line one."""
+    with Workspace() as ws:
+        bundle = ws.copy("rust-automaton-db")
+        (bundle / "supplies").mkdir()
+        (bundle / "supplies" / "a.txt").write_text("a\n", encoding="utf-8")
+        before = h.tree_digest(bundle)
+        h.check_refused_first(
+            "outside git, --describe",
+            add_cmd(bundle, "--from", "supplies/a.txt", "--to", "safe/a.txt", "--describe", "a\x07b"),
+            "--describe", bundle, before,
+        )
+        # POSITIVE CONTROL: with a writable value the note is still printed.
+        ok = add_cmd(bundle, "--from", "supplies/a.txt", "--to", "safe/a.txt", "--describe", "fine")
+        check_in("not inside a git repository", ok.output, "control: outside git the note is printed for a writable value")
+
+
 def cli_case_to_escapes() -> None:
     with Workspace() as ws:
         bundle = ws.copy("rust-automaton-db")
@@ -1354,6 +1372,8 @@ def main() -> int:
         cli_case_lesson_optional()
     with case("add refuses an unwritable value before it prints the plan"):
         cli_case_refusal_comes_before_the_plan()
+    with case("add: the refusal is line one outside a git repository too"):
+        cli_case_refusal_first_outside_git()
     with case("add refuses a dirty working tree, and --force overrides"):
         cli_case_dirty_tree()
     with case("add --check prints the plan and changes nothing"):

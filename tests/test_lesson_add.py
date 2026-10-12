@@ -2004,6 +2004,28 @@ def case_refusal_comes_before_the_plan() -> None:
         check_in("add: lessons/borrow-detour.md", result.stdout, "refusal-first control: the plan is printed")
 
 
+def case_refusal_first_outside_git() -> None:
+    """A bundle outside git: require_clean_tree prints a note, and the refusal
+    must still be the first line, for the optional and the main-path add."""
+    import harness as h
+
+    with Workspace() as ws:
+        bundle = ws.copy("rust-automaton-db", "b")
+        for label, args, option in (
+            ("optional --offer-because",
+             ("--id", "borrow-detour", "--title", "A borrow detour", "--optional",
+              "--offer-at", OFFER_AT, "--offer-because", "a\x07b"), "--offer-because"),
+            ("optional --title",
+             ("--id", "borrow-detour", "--title", "a\x07b", "--optional",
+              "--offer-at", OFFER_AT, "--offer-because", BECAUSE), "--title"),
+            ("main-path --title", ("--id", "t-probe", "--title", "a\x07b"), "--title"),
+        ):
+            before = tree_digest(bundle)
+            h.check_refused_first(f"outside git, {label}", add(bundle, *args), option, bundle, before)
+        control = add(bundle, "--id", "t-probe", "--title", "Fine")
+        check_in("not inside a git repository", control.output, "control: outside git the note is printed for a writable value")
+
+
 def case_offer_because_round_trips() -> None:
     """--offer-because is free text and goes through emit_scalar. Measured for
     belay-authoring#26: it already round-trips by value, so this pins that and
@@ -2109,6 +2131,8 @@ def main() -> int:
 
     with case("F29a a refused free-text option is the first line of output"):
         case_refusal_comes_before_the_plan()
+    with case("F29c the refusal is line one outside a git repository too"):
+        case_refusal_first_outside_git()
     with case("F29b an --offer-because that cannot be written is refused cleanly"):
         case_offer_because_unwritable()
     with case("F29 --offer-because round-trips free text by value"):

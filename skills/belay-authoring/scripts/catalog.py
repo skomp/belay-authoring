@@ -104,13 +104,15 @@ def _scalar(bundle: str, field: str, value: object) -> str:
 
 
 def _flow_list(bundle: str, field: str, values: list) -> str:
-    """A flow sequence, `[a, b]`, whose items bundlelib.emit_flow_scalar wrote.
+    """A flow sequence, `[a, b]`, written and read back as a whole by
+    bundlelib.emit_flow_list.
 
     emit_scalar alone is not enough here: its plain form is right in block
-    context and wrong inside `[...]`, where `a, b` reads as two items.
+    context and wrong inside `[...]`, where `a, b` reads as two items. And
+    items that each read back alone can still make one unreadable line.
     """
     try:
-        return "[" + ", ".join(bl.emit_flow_scalar(str(v)) for v in values) + "]"
+        return bl.emit_flow_list([str(v) for v in values], key=field)
     except bl.ToolError as exc:
         raise bl.ToolError(f"{bundle}: field {field!r}: {exc}") from None
 

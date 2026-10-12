@@ -1168,9 +1168,9 @@ def main() -> int:
         # it would follow text that looks like success.
         with Workspace() as ws:
             bundle, instance = pair(ws)
-            # A bundle outside git prints a note before anything else; the
-            # property under test is about the plan, so give it a repository.
-            git_init(bundle)
+            # The bundle is deliberately NOT a git repository: that is where
+            # require_clean_tree prints a note, and the refusal must still be
+            # the first line.
             source = (instance / GEN / LIFE).read_text(encoding="utf-8")
             # yamlite cannot read back the `"` before ` #` refusal even as input,
             # so a control character is the one refusal a lesson can carry.
