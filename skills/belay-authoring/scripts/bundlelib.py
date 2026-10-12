@@ -71,6 +71,8 @@ __all__ = [
     "LOOKALIKE_RE",
     "set_frontmatter_field",
     "emit_scalar",
+    "emit_quoted_scalar",
+    "emit_flow_scalar",
     "refuse_unwritable",
     "render_supplies_item",
     "add_supplies",
@@ -1258,6 +1260,38 @@ def _refuse_unwritable_characters(value: str) -> None:
             )
 
 
+def _double_quoted(value: str) -> str:
+    """`value` as a double-quoted scalar: backslash, double quote and the
+    whitespace that would break single-line-ness escaped."""
+    return '"' + (
+        value.replace("\\", "\\\\")
+        .replace('"', '\\"')
+        .replace("\n", "\\n")
+        .replace("\r", "\\r")
+        .replace("\t", "\\t")
+    ) + '"'
+
+
+def _reads_back(document: str, pick, expected) -> bool:
+    """True when `document` parses with load_yaml and `pick(parsed)` is
+    exactly `expected` (a str, or a list of str)."""
+    try:
+        parsed = load_yaml(document, "emit_scalar probe")
+    except YamlError:
+        return False
+    if not isinstance(parsed, dict):
+        return False
+    got = pick(parsed)
+    if isinstance(expected, list):
+        return (
+            isinstance(got, list)
+            and len(got) == len(expected)
+            and all(isinstance(g, str) for g in got)
+            and got == expected
+        )
+    return isinstance(got, str) and got == expected
+
+
 def emit_scalar(value: str) -> str:
     """A single-line YAML scalar that yamlite reads back as `value`.
 
@@ -1279,24 +1313,10 @@ def emit_scalar(value: str) -> str:
     character is refused the same way.
     """
     _refuse_unwritable_characters(value)
-    quoted = '"' + (
-        value.replace("\\", "\\\\")
-        .replace('"', '\\"')
-        .replace("\n", "\\n")
-        .replace("\r", "\\r")
-        .replace("\t", "\\t")
-    ) + '"'
+    quoted = _double_quoted(value)
 
     def reads_back(form: str) -> bool:
-        try:
-            parsed = load_yaml(f"value: {form}\n", "emit_scalar probe")
-        except YamlError:
-            return False
-        return (
-            isinstance(parsed, dict)
-            and isinstance(parsed.get("value"), str)
-            and parsed["value"] == value
-        )
+        return _reads_back(f"value: {form}\n", lambda doc: doc.get("value"), value)
 
     if plain_scalar_is_portable(value) and reads_back(value):
         return value
@@ -1312,6 +1332,60 @@ def emit_scalar(value: str) -> str:
         f"the value {value!r} cannot be written in a form this toolkit can "
         f"read back.{cause} Nothing was written."
     )
+
+
+def emit_quoted_scalar(value: str) -> str:
+    """`value` always in the double-quoted form, for a field whose house style
+    is to quote (the catalogue's `scope`). Same refusals and the same read-back
+    guarantee as emit_scalar; the only difference is that the plain form is
+    never chosen."""
+    _refuse_unwritable_characters(value)
+    quoted = _double_quoted(value)
+    if not _reads_back(f"value: {quoted}\n", lambda doc: doc.get("value"), value):
+        emit_scalar(value)  # raises the same refusal, with its explanation
+        raise ToolError(
+            f"the value {value!r} cannot be written in a form this toolkit "
+            f"can read back. Nothing was written."
+        )
+    return quoted
+
+
+# A flow sequence, `[a, b]`, has more syntax than block context, and the two
+# readers disagree about the edges of it. emit_scalar was written for BLOCK
+# context. Measured with yamlite and PyYAML 6.0.2 inside `[...]`:
+#
+#   * the plain `a, b` is read as TWO items, and `x]`, `a[b`, `a{b` and `a}b`
+#     end the list early or make it unparseable (both readers);
+#   * PyYAML alone rejects a plain item with a leading `:` or a `?` after the
+#     first character (`:<`, `1?>`), which yamlite reads happily - so a
+#     yamlite-only read-back is not evidence for flow context.
+#
+# So the plain form is kept only for a value made of word characters, spaces
+# and `. + / -`, starting with a word character: text both readers read as one
+# item. Anything else is double-quoted, which is always a single item.
+_FLOW_PLAIN_RE = re.compile(r"[^\W_][\w .+/-]*\Z")
+
+
+def emit_flow_scalar(value: str) -> str:
+    """A scalar for use as an item of a flow sequence, `[item, item]`.
+
+    emit_scalar decides first, so a value it refuses is refused here too and a
+    value it quotes stays quoted. A value it would leave plain stays plain only
+    when it matches _FLOW_PLAIN_RE; otherwise the double-quoted form is used.
+    The result is parsed back as `[<form>]` with load_yaml, and ToolError is
+    raised unless the list holds exactly `[value]`.
+    """
+    form = emit_scalar(value)
+    if form == value and not _FLOW_PLAIN_RE.match(value):
+        form = _double_quoted(value)
+    if not _reads_back(
+        f"value: [{form}]\n", lambda doc: doc.get("value"), [value]
+    ):
+        raise ToolError(
+            f"the value {value!r} cannot be written as an item of a flow "
+            f"sequence in a form this toolkit can read back. Nothing was written."
+        )
+    return form
 
 
 def refuse_unwritable(label: str, value: str) -> None:

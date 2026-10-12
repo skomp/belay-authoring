@@ -26,6 +26,7 @@ used wherever both matter.
 
 from __future__ import annotations
 
+import json
 import shutil
 import sys
 from pathlib import Path
@@ -34,6 +35,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from harness import (  # noqa: E402
     CATALOG,
+    Run,
+    note,
     FIXTURES,
     Workspace,
     case,
@@ -46,8 +49,14 @@ from harness import (  # noqa: E402
     run,
 )
 
+import harness as h  # noqa: E402
 import bundlelib as bl  # noqa: E402  (harness puts SCRIPTS on sys.path)
 import catalog  # noqa: E402  the module under test, imported for SCOPE_BANDS
+
+try:
+    import yaml as pyyaml
+except ImportError:  # pragma: no cover - depends on the machine
+    pyyaml = None
 
 
 # --------------------------------------------------------------------------
@@ -619,6 +628,162 @@ def case_output_destinations() -> None:
         check_in("PASS", named.output, "-o <path> validates what it wrote")
 
 
+# --------------------------------------------------------------------------
+# belay-authoring#33 - every catalogue scalar goes through bundlelib
+# --------------------------------------------------------------------------
+
+# The six values the issue measured, then the values that are safe in block
+# context and wrong inside a flow sequence `[a, b]`. emit_scalar returns the
+# plain form for `a, b`, `x]`, `a[b`, `a{b` and `a}b`; both readers then split
+# or reject the line. catalog.py writes subjects, aliases and style as flow
+# sequences, so those values are what the flow helper exists for.
+ISSUE_VALUES = ["Trailing colon:", "0.74", "1e3", "has\ttab", "has\nnewline", " leading space"]
+FLOW_VALUES = ["a, b", "x]", "a[b", "a{b", "a}b", "[a]"]
+
+
+def _yaml_quoted(value: str) -> str:
+    """A YAML double-quoted scalar for the FIXTURE manifest. JSON strings are
+    valid YAML double-quoted scalars, and this keeps the fixture independent of
+    the code under test."""
+    # yamlite has no \\u escape, so the one control character used here goes
+    # into the fixture file as the raw character.
+    return json.dumps(value).replace("\\u0007", "\x07")
+
+
+def _read_both(text: str) -> list:
+    """(yamlite parse, PyYAML parse or None) of a catalogue's text."""
+    ours = bl.load_yaml(text, "catalog.yaml")
+    theirs = pyyaml.safe_load(text) if pyyaml is not None else None
+    return [ours, theirs]
+
+
+def _catalogue_entry(value: str, field: str, list_field: bool) -> tuple[Run, Path, Path]:
+    """Build a one-bundle repo whose manifest holds `value` in `field`."""
+    ws = Workspace()
+    repo = ws.path("repo")
+    repo.mkdir()
+    bundle = make_bundle(repo, "scalar-probe", 3)
+    manifest = bundle / "tutorial.yaml"
+    old = {"title": "title: Synthetic scalar-probe", "subjects": "subjects: [fixtures, testing]",
+           "aliases": "aliases: [synthetic]", "style": "style: [exercise-based]",
+           "level": "level: beginner"}[field]
+    new = f"{field}:\n  - {_yaml_quoted(value)}" if list_field else f"{field}: {_yaml_quoted(value)}"
+    edit(manifest, old, new)
+    got = bl.load_manifest(bundle)[0].get(field)
+    check(
+        got == ([value] if list_field else value),
+        f"fixture: the manifest's {field} reads back as {value!r} (got {got!r})",
+    )
+    return run(CATALOG, repo, "-o", "-"), repo, ws.root
+
+
+def case_scalars_round_trip_in_both_readers() -> None:
+    if pyyaml is None:
+        note("PyYAML is not importable: the PyYAML half of the catalogue read-back is skipped")
+        print("    note: PyYAML not importable; PyYAML half skipped")
+    scalar_fields = ("title", "level")
+    list_fields = ("subjects", "aliases", "style")
+    for value in ISSUE_VALUES + FLOW_VALUES:
+        for field in scalar_fields + list_fields:
+            as_list = field in list_fields
+            if not as_list and value in FLOW_VALUES:
+                continue  # flow indicators matter only inside [...]; scalars are covered by ISSUE_VALUES
+            done, repo, root = _catalogue_entry(value, field, as_list)
+            try:
+                label = f"{field} {value!r}"
+                check(done.returncode == 0, f"{label}: exit 0 ({done.stderr[-300:]!r})")
+                ours, theirs = _read_both(done.stdout)
+                entry = ours["tutorials"][0]
+                want = [value] if as_list else value
+                check(entry[field] == want, f"{label}: yamlite reads {entry[field]!r}")
+                if pyyaml is not None:
+                    got = theirs["tutorials"][0][field]
+                    check(got == want, f"{label}: PyYAML reads {got!r}")
+                    check(theirs == ours, f"{label}: both readers parse the whole catalogue to the same data")
+            finally:
+                shutil.rmtree(root, ignore_errors=True)
+
+
+def case_flow_list_keeps_neighbours_intact() -> None:
+    """The reason emit_flow_scalar exists: a comma inside an item must not turn
+    one item into two, and a bracket must not end the list early. Checked with
+    two items so a split shows as a changed LENGTH, not just changed text."""
+    with Workspace() as ws:
+        repo = ws.path("repo")
+        repo.mkdir()
+        bundle = make_bundle(repo, "flow-probe", 3)
+        items = ["one, two", "x]", "plain"]
+        edit(bundle / "tutorial.yaml", "subjects: [fixtures, testing]",
+             "subjects:\n" + "".join(f"  - {_yaml_quoted(i)}\n" for i in items).rstrip("\n"))
+        done = run(CATALOG, repo, "-o", "-")
+        check(done.returncode == 0, f"flow items: exit 0 ({done.stderr[-300:]!r})")
+        ours, theirs = _read_both(done.stdout)
+        check(ours["tutorials"][0]["subjects"] == items, f"yamlite reads the three items (got {ours['tutorials'][0]['subjects']!r})")
+        if pyyaml is not None:
+            check(theirs["tutorials"][0]["subjects"] == items, "PyYAML reads the same three items")
+        # POSITIVE CONTROL: the helper is what makes the difference. The
+        # block-context emitter alone writes a line the readers split.
+        raw = "[" + ", ".join(bl.emit_scalar(i) for i in items) + "]"
+        try:
+            got = bl.load_yaml(f"k: {raw}\n", "control")["k"]
+        except bl.YamlError as exc:
+            got = f"unreadable ({exc})"
+        check(got != items, f"control: emit_scalar alone does NOT survive a flow sequence (read {got!r})")
+
+
+def case_refused_field_stops_the_run() -> None:
+    """A field emit_scalar refuses: ToolError naming bundle and field, exit 2,
+    nothing written - not skipped, not altered. A good bundle beside it is not
+    catalogued either, because a partial catalogue is a silent omission."""
+    for field, list_field in (("title", False), ("level", False), ("subjects", True), ("style", True)):
+        for value in ("bell\x07here",):
+            with Workspace() as ws:
+                repo = ws.path("repo")
+                repo.mkdir()
+                ws_copy(repo, "foldered-bundle")
+                bad = make_bundle(repo, "bad-bundle", 3)
+                manifest = bad / "tutorial.yaml"
+                old = {"title": "title: Synthetic bad-bundle", "level": "level: beginner",
+                       "subjects": "subjects: [fixtures, testing]",
+                       "style": "style: [exercise-based]"}[field]
+                new = f"{field}:\n  - {_yaml_quoted(value)}" if list_field else f"{field}: {_yaml_quoted(value)}"
+                edit(manifest, old, new)
+                got = bl.load_manifest(bad)[0].get(field)
+                check(got == ([value] if list_field else value),
+                      f"fixture: {field} reads back as {value!r} (got {got!r})")
+                before = h.tree_digest(repo)
+                label = f"refused {field} {value!r}"
+                for extra in ((), ("-o", "-")):
+                    done = run(CATALOG, repo, *extra)
+                    check(done.returncode == 2, f"{label} {extra}: exit code 2 (got {done.returncode})")
+                    check(done.stdout == "", f"{label} {extra}: nothing on stdout")
+                    check_in("error: ", done.stderr, f"{label} {extra}: the run says error")
+                    check_in("bad-bundle", done.stderr, f"{label} {extra}: the error names the bundle")
+                    check_in(repr(field), done.stderr, f"{label} {extra}: the error names the field")
+                    check_not_in("foldered-demo:", done.stderr, f"{label} {extra}: nothing was reported as catalogued")
+                check(h.tree_digest(repo) == before, f"{label}: nothing was written (byte-identical tree)")
+                check(not has_exactly(repo, "catalog.yaml"), f"{label}: no catalog.yaml exists")
+    # POSITIVE CONTROL: the same repository with a writable value is catalogued.
+    with Workspace() as ws:
+        repo = ws.path("repo")
+        repo.mkdir()
+        ws_copy(repo, "foldered-bundle")
+        make_bundle(repo, "bad-bundle", 3)
+        done = run(CATALOG, repo)
+        check(done.returncode == 0, f"control: without the bad value both bundles are catalogued ({done.stderr[-200:]!r})")
+        check_in("2 bundle(s)", done.output, "control: two bundles were written")
+
+
+def case_no_private_quoting_rule() -> None:
+    """catalog.py carries no scalar-quoting rule: no yaml_scalar, and no
+    hand-built quote around a value."""
+    source = (Path(catalog.__file__)).read_text(encoding="utf-8")
+    check(not hasattr(catalog, "yaml_scalar"), "catalog has no yaml_scalar")
+    check("replace(" not in source or 'replace(\'"\'' not in source, "catalog.py does not escape quotes itself")
+    check("emit_scalar" in source and "emit_flow_scalar" in source and "emit_quoted_scalar" in source,
+          "catalog.py writes through bundlelib's emitters")
+
+
 def main() -> int:
     print(f"catalog.py  ({CATALOG})")
     print()
@@ -642,6 +807,14 @@ def main() -> int:
         case_optional_lesson_count()
     with case("-o - and -o <path>"):
         case_output_destinations()
+    with case("belay-authoring#33: scalars round-trip by value in yamlite and PyYAML"):
+        case_scalars_round_trip_in_both_readers()
+    with case("belay-authoring#33: a comma or bracket in a list item stays one item"):
+        case_flow_list_keeps_neighbours_intact()
+    with case("belay-authoring#33: a field emit_scalar refuses stops the run"):
+        case_refused_field_stops_the_run()
+    with case("belay-authoring#33: catalog.py has no quoting rule of its own"):
+        case_no_private_quoting_rule()
     return report("catalog.py")
 
 

@@ -157,6 +157,71 @@ def case_resolver_derivation() -> None:
         check(squash(pattern) in mine, f"PyYAML's {tag} pattern is carried by bundlelib")
 
 
+def read_flow_both(form: str, other: str):
+    """(yamlite list, pyyaml list or exception) for `k: [<form>, <other>]`."""
+    doc = f"k: [{form}, {other}]\n"
+    try:
+        y = bl.load_yaml(doc, "t")["k"]
+    except Exception as exc:  # noqa: BLE001 - the exception is the finding
+        y = exc
+    p = None
+    if pyyaml is not None:
+        try:
+            p = pyyaml.safe_load(doc)["k"]
+        except Exception as exc:  # noqa: BLE001
+            p = exc
+    return y, p
+
+
+def case_flow_property() -> None:
+    """emit_flow_scalar: the same alphabet, read as an item of `[item, other]`.
+    emit_scalar is the control: it is block-context only, and the same
+    values fail when it is used inside a flow sequence."""
+    if pyyaml is None:
+        note("PyYAML is not importable: the PyYAML half of the emit_flow_scalar property test was SKIPPED")
+    rng = random.Random(33)
+    values = []
+    for _ in range(4000):
+        parts = []
+        for _ in range(rng.randint(1, 7)):
+            parts.append(rng.choice(TOKENS) if rng.random() < 0.15 else rng.choice(ALPHABET))
+        values.append("".join(parts))
+    bad, refused, control_failures = [], 0, 0
+    for value in values:
+        try:
+            form = bl.emit_flow_scalar(value)
+        except bl.ToolError:
+            refused += 1
+            continue
+        y, p = read_flow_both(form, "other")
+        want = [value, "other"]
+        if y != want or (pyyaml is not None and p != want):
+            bad.append((value, form, y, p))
+        # CONTROL: the block-context emitter in the same position.
+        block = bl.emit_scalar(value)
+        cy, cp = read_flow_both(block, "other")
+        if cy != want or (pyyaml is not None and cp != want):
+            control_failures += 1
+    note(
+        f"emit_flow_scalar property test: {len(values)} values, {refused} refused, "
+        f"{control_failures} values that emit_scalar alone gets wrong inside [...]"
+    )
+    for value, form, y, p in bad[:10]:
+        print(f"    ---- {value!r} -> {form}: yamlite {y!r}, PyYAML {p!r}")
+    check(not bad, f"every flow item reads back as the exact string in both readers ({len(bad)} did not)")
+    check(control_failures > 0, "control: emit_scalar alone is wrong for some values inside a flow sequence")
+    check(refused > 0, "the flow property test saw refused values")
+    for value in ("a, b", "x]", "a[b", "a{b", "a}b"):
+        check(bl.emit_flow_scalar(value).startswith('"'), f"{value!r} is quoted in flow context")
+    check(bl.emit_flow_scalar("plain words") == "plain words", "a plain value stays plain in flow context")
+    check(bl.emit_quoted_scalar("3 lessons; a few days") == '"3 lessons; a few days"', "emit_quoted_scalar always quotes")
+    try:
+        bl.emit_quoted_scalar("a\x07b")
+        check(False, "emit_quoted_scalar refuses a control character")
+    except bl.ToolError:
+        check(True, "emit_quoted_scalar refuses a control character")
+
+
 def main() -> int:
     print("emit_scalar")
     with case("property: every value round-trips by value or is refused"):
@@ -165,6 +230,8 @@ def main() -> int:
         case_named()
     with case("the retyped-scalar patterns match PyYAML's resolver"):
         case_resolver_derivation()
+    with case("emit_flow_scalar and emit_quoted_scalar (belay-authoring#33)"):
+        case_flow_property()
     return report("test_emit_scalar.py")
 
 
