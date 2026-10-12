@@ -2026,6 +2026,28 @@ def case_refusal_first_outside_git() -> None:
         check_in("not inside a git repository", control.output, "control: outside git the note is printed for a writable value")
 
 
+def case_blank_values_refused_before_the_plan() -> None:
+    """render_optional_entry refuses a blank --anticipates item or a blank
+    --offer-because after the plan has printed. Plain input validation, so it
+    comes first, names the option, and writes nothing."""
+    import harness as h
+
+    for label, extra, option in (
+        ("empty --anticipates", ("--offer-because", BECAUSE, "--anticipates", ""), "--anticipates"),
+        ("blank --anticipates", ("--offer-because", BECAUSE, "--anticipates", "   "), "--anticipates"),
+        ("blank --offer-because", ("--offer-because", "   "), "--offer-because"),
+    ):
+        with Workspace() as ws:
+            bundle = ws.copy("rust-automaton-db", "b")
+            before = tree_digest(bundle)
+            h.check_refused_first(
+                label,
+                add(bundle, "--id", "borrow-detour", "--title", "A borrow detour", "--optional",
+                    "--offer-at", OFFER_AT, *extra),
+                option, bundle, before,
+            )
+
+
 def case_offer_because_round_trips() -> None:
     """--offer-because is free text and goes through emit_scalar. Measured for
     belay-authoring#26: it already round-trips by value, so this pins that and
@@ -2133,6 +2155,8 @@ def main() -> int:
         case_refusal_comes_before_the_plan()
     with case("F29c the refusal is line one outside a git repository too"):
         case_refusal_first_outside_git()
+    with case("F29d a blank --anticipates or --offer-because is refused before the plan"):
+        case_blank_values_refused_before_the_plan()
     with case("F29b an --offer-because that cannot be written is refused cleanly"):
         case_offer_because_unwritable()
     with case("F29 --offer-because round-trips free text by value"):

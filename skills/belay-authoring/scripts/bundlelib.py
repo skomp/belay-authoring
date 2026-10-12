@@ -72,6 +72,7 @@ __all__ = [
     "set_frontmatter_field",
     "emit_scalar",
     "emit_quoted_scalar",
+    "emit_folded_block",
     "emit_flow_list",
     "refuse_unwritable",
     "render_supplies_item",
@@ -1252,7 +1253,14 @@ def _refuse_unwritable_characters(value: str) -> None:
     for ch in value:
         if ch in "\t\n\r":
             continue
-        if unicodedata.category(ch) in ("Cc", "Zl", "Zp"):
+        # U+FFFE, U+FFFF and the surrogates are not YAML characters: PyYAML's
+        # reader rejects the whole stream ("unacceptable character") wherever
+        # they appear, quoted or not, although yamlite reads them.
+        if (
+            unicodedata.category(ch) in ("Cc", "Zl", "Zp")
+            or ch in "\ufffe\uffff"
+            or "\ud800" <= ch <= "\udfff"
+        ):
             raise ToolError(
                 f"the value {value!r} contains the character U+{ord(ch):04X}, "
                 f"which cannot be written on one line of YAML in a form a "
@@ -1417,6 +1425,61 @@ def emit_flow_list(values: list, key: str = "value") -> str:
                 f"was written."
             )
     return text
+
+
+def emit_folded_block(
+    text: str, indent: str, width: int = 88, key: str = "description"
+) -> list[str]:
+    """The content lines of a folded block scalar (`key: >`) holding `text`.
+
+    Returns the lines that follow the `key: >` line, each starting with
+    `indent`. Words are re-flowed to `width`; every run of whitespace in
+    `text` (spaces, tabs, line breaks, blank lines) folds to one space, which
+    is what a folded scalar does with it. The value a reader must get back is
+    therefore the words joined by single spaces plus one trailing newline
+    (YAML's "clip"), or the empty string when there are no words.
+
+    Refused with ToolError, nothing returned: a character emit_scalar refuses
+    (a control character is written raw into a block, and PyYAML then rejects
+    the whole file while yamlite reads it), and any text whose block does not
+    read back to that value. The read-back parses the EXACT lines returned,
+    at column 0 and nested one level, with load_yaml.
+    """
+    if not isinstance(text, str):
+        raise ToolError(f"{key} must be a string, got {type(text).__name__}")
+    _refuse_unwritable_characters(text)
+    words = text.split()
+    lines: list[str] = []
+    current = indent
+    for word in words:
+        if current != indent and len(current) + 1 + len(word) > width:
+            lines.append(current)
+            current = indent + word
+        else:
+            current = current + (" " if current != indent else "") + word
+    if current != indent:
+        lines.append(current)
+    expected = " ".join(words) + ("\n" if words else "")
+    body = "".join(line + "\n" for line in lines)
+    if not indent.strip(" ") == "" or not indent:
+        raise ToolError("a folded block's content lines need a space indent")
+    documents = [f"{key}: >\n{body}"]
+    if len(indent) >= 2:  # nested: the key sits one space left of the content
+        documents.append(f"top:\n{' ' * (len(indent) - 1)}{key}: >\n{body}")
+    for document in documents:
+        try:
+            parsed = load_yaml(document, "emit_folded_block probe")
+        except YamlError:
+            parsed = None
+        if isinstance(parsed, dict) and "top" in parsed:
+            parsed = parsed["top"]
+        got = parsed.get(key) if isinstance(parsed, dict) else None
+        if got != expected:
+            raise ToolError(
+                f"the {key} {text!r} cannot be written as a folded block in a "
+                f"form this toolkit can read back. Nothing was written."
+            )
+    return lines
 
 
 def refuse_unwritable(label: str, value: str) -> None:

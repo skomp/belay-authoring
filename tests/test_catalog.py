@@ -810,6 +810,100 @@ def case_each_item_fine_but_the_line_is_not() -> None:
         check(done.returncode == 0, f"control: without the third item it is catalogued ({done.stderr[-200:]!r})")
 
 
+# Characters a folded block would carry raw into the file. yamlite reads every
+# one of them; PyYAML rejects the whole file ("unacceptable character") for each.
+BAD_DESCRIPTION_CHARS = [0x00, 0x07, 0x08, 0x0B, 0x0C, 0x0E, 0x1B, 0x1C, 0x7F, 0x80, 0x85, 0x9F,
+                         0x2028, 0xFFFE, 0xFFFF]
+
+
+def _set_description(bundle: Path, text_line: str) -> None:
+    edit(bundle / "tutorial.yaml",
+         "description: >\n  A synthetic bundle built so the scope derivation can be measured at a\n"
+         "  known lesson count.\n",
+         f"description: >\n  {text_line}\n")
+
+
+def case_description_refused_characters() -> None:
+    """belay-authoring#33: the folded description block is checked like every
+    other scalar. A character emit_scalar refuses stops the run, naming the
+    bundle and the field, and writes nothing."""
+    for code in BAD_DESCRIPTION_CHARS:
+        with Workspace() as ws:
+            repo = ws.path("repo")
+            repo.mkdir()
+            bundle = make_bundle(repo, "desc-probe", 3)
+            _set_description(bundle, f"before {chr(code)} after")
+            label = f"description with U+{code:04X}"
+            check(
+                chr(code) in str(bl.load_manifest(bundle)[0].get("description", "")),
+                f"fixture: yamlite reads the manifest with {label}",
+            )
+            before = h.tree_digest(repo)
+            for extra in ((), ("-o", "-")):
+                done = run(CATALOG, repo, *extra)
+                check(done.returncode == 2, f"{label} {extra}: exit code 2 (got {done.returncode})")
+                check(done.stdout == "", f"{label} {extra}: nothing on stdout")
+                check_in("desc-probe", done.stderr, f"{label} {extra}: the error names the bundle")
+                check_in("'description'", done.stderr, f"{label} {extra}: the error names the field")
+            check(h.tree_digest(repo) == before, f"{label}: nothing was written")
+    # POSITIVE CONTROL: an ordinary description, with a tab and odd whitespace.
+    with Workspace() as ws:
+        repo = ws.path("repo")
+        repo.mkdir()
+        bundle = make_bundle(repo, "desc-probe", 3)
+        _set_description(bundle, "# not a comment:   words\there")
+        done = run(CATALOG, repo, "-o", "-")
+        check(done.returncode == 0, f"control: a plain description is written ({done.stderr[-200:]!r})")
+        ours, theirs = _read_both(done.stdout)
+        want = "# not a comment: words here\n"
+        check(ours["tutorials"][0]["description"] == want, f"control: yamlite reads {ours['tutorials'][0]['description']!r}")
+        if pyyaml is not None:
+            check(theirs["tutorials"][0]["description"] == want, "control: PyYAML reads the same description")
+
+
+def case_non_string_fields_refused() -> None:
+    """belay-authoring#33: str() used to write None as `None`. A present field
+    that is not a string stops the run; an ABSENT field keeps today's behaviour."""
+    probes = (
+        ("title", "title: Synthetic scalar-probe", "title: null"),
+        ("title", "title: Synthetic scalar-probe", "title: 5"),
+        ("level", "level: beginner", "level: null"),
+        ("level", "level: beginner", "level: true"),
+        ("subjects", "subjects: [fixtures, testing]", "subjects: [fixtures, null]"),
+        ("aliases", "aliases: [synthetic]", "aliases: [1, two]"),
+        ("style", "style: [exercise-based]", "style: just-a-string"),
+        ("workspace_kind", "workspace_kind: none", "workspace_kind: 0"),
+    )
+    for field, old, new in probes:
+        with Workspace() as ws:
+            repo = ws.path("repo")
+            repo.mkdir()
+            bundle = make_bundle(repo, "scalar-probe", 3)
+            edit(bundle / "tutorial.yaml", old, new)
+            before = h.tree_digest(repo)
+            label = f"{new!r}"
+            done = run(CATALOG, repo)
+            check(done.returncode == 2, f"{label}: exit code 2 (got {done.returncode})")
+            check_in("scalar-probe", done.stderr, f"{label}: the error names the bundle")
+            check_in(repr(field), done.stderr, f"{label}: the error names the field")
+            check_not_in("None", (repo / "catalog.yaml").read_text(encoding="utf-8") if has_exactly(repo, "catalog.yaml") else "",
+                         f"{label}: no 'None' was written")
+            check(h.tree_digest(repo) == before, f"{label}: nothing was written")
+    # An ABSENT field is not refused: title and level are written as "" as before.
+    with Workspace() as ws:
+        repo = ws.path("repo")
+        repo.mkdir()
+        bundle = make_bundle(repo, "scalar-probe", 3)
+        edit(bundle / "tutorial.yaml", "title: Synthetic scalar-probe\n", "")
+        edit(bundle / "tutorial.yaml", "level: beginner\n", "")
+        edit(bundle / "tutorial.yaml", "subjects: [fixtures, testing]\n", "")
+        done = run(CATALOG, repo, "-o", "-")
+        check(done.returncode == 0, f"control: absent fields are still written ({done.stderr[-200:]!r})")
+        entry = _read_both(done.stdout)[0]["tutorials"][0]
+        check(entry["title"] == "" and entry["level"] == "" and "subjects" not in entry,
+              f"control: absent title and level are '' and absent subjects is omitted (got {entry.get('title')!r}, {entry.get('level')!r})")
+
+
 def case_no_private_quoting_rule() -> None:
     """catalog.py carries no scalar-quoting rule: no yaml_scalar, and no
     hand-built quote around a value."""
@@ -851,6 +945,10 @@ def main() -> int:
         case_refused_field_stops_the_run()
     with case("belay-authoring#33: items that read back alone but not as one line are refused"):
         case_each_item_fine_but_the_line_is_not()
+    with case("belay-authoring#33: a description with a character no reader accepts is refused"):
+        case_description_refused_characters()
+    with case("belay-authoring#33: a field that is not a string is refused, an absent one is not"):
+        case_non_string_fields_refused()
     with case("belay-authoring#33: catalog.py has no quoting rule of its own"):
         case_no_private_quoting_rule()
     return report("catalog.py")

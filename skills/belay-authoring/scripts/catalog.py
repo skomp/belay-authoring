@@ -88,6 +88,20 @@ def find_bundles(repo: Path) -> list[Path]:
     return sorted(found)
 
 
+def _require_string(bundle: str, field: str, value: object) -> None:
+    """Refuse a present value that is not a string. str() would write None as
+    `None`, a number as a different scalar and a dict as its Python repr, so
+    the catalogue would not say what the manifest says. (An ABSENT field is not
+    this case: it is read as '' by the callers. The validator's check 8 reports
+    an empty required field, but not a number, and catalog.py does not run it
+    on the bundle first, so this message stands on its own.)"""
+    if not isinstance(value, str):
+        raise bl.ToolError(
+            f"{bundle}: field {field!r}: the manifest value {value!r} is "
+            f"{type(value).__name__}, not a string. Nothing was written."
+        )
+
+
 def _scalar(bundle: str, field: str, value: object) -> str:
     """One catalogue scalar, written by bundlelib.emit_scalar.
 
@@ -97,8 +111,9 @@ def _scalar(bundle: str, field: str, value: object) -> str:
     differs from the manifest it was built from is the drift this tool exists
     to prevent.
     """
+    _require_string(bundle, field, value)
     try:
-        return bl.emit_scalar(str(value))
+        return bl.emit_scalar(value)
     except bl.ToolError as exc:
         raise bl.ToolError(f"{bundle}: field {field!r}: {exc}") from None
 
@@ -111,26 +126,15 @@ def _flow_list(bundle: str, field: str, values: list) -> str:
     context and wrong inside `[...]`, where `a, b` reads as two items. And
     items that each read back alone can still make one unreadable line.
     """
+    if not isinstance(values, list) or not all(isinstance(v, str) for v in values):
+        raise bl.ToolError(
+            f"{bundle}: field {field!r}: the manifest value {values!r} is not a "
+            f"list of strings. Nothing was written."
+        )
     try:
-        return bl.emit_flow_list([str(v) for v in values], key=field)
+        return bl.emit_flow_list(values, key=field)
     except bl.ToolError as exc:
         raise bl.ToolError(f"{bundle}: field {field!r}: {exc}") from None
-
-
-def wrap_description(text: str, indent: str) -> list[str]:
-    """A folded block scalar, so a long description stays readable."""
-    words = " ".join(str(text).split()).split(" ")
-    lines: list[str] = []
-    current = indent
-    for word in words:
-        if current != indent and len(current) + 1 + len(word) > 88:
-            lines.append(current)
-            current = indent + word
-        else:
-            current = current + (" " if current != indent else "") + word
-    if current != indent:
-        lines.append(current)
-    return lines
 
 
 def entry_lines(
@@ -144,16 +148,21 @@ def entry_lines(
     out = [f"  - id: {_scalar(bundle, 'id', manifest['id'])}"]
     out.append(f"    title: {_scalar(bundle, 'title', manifest.get('title', ''))}")
     out.append("    description: >")
-    out.extend(wrap_description(manifest.get("description", ""), "      "))
+    description = manifest.get("description", "")
+    _require_string(bundle, "description", description)
+    try:
+        out.extend(bl.emit_folded_block(description, "      "))
+    except bl.ToolError as exc:
+        raise bl.ToolError(f"{bundle}: field 'description': {exc}") from None
     # Field order follows catalogue-format.md section 5, so a generated entry
     # diffs cleanly against a hand-written one.
     for field in ("subjects", "aliases"):
         value = manifest.get(field)
-        if isinstance(value, list) and value:
+        if value not in (None, []):  # absent, null or empty: nothing to write
             out.append(f"    {field}: {_flow_list(bundle, field, value)}")
     out.append(f"    level: {_scalar(bundle, 'level', manifest.get('level', ''))}")
     value = manifest.get("style")
-    if isinstance(value, list) and value:
+    if value not in (None, []):
         out.append(f"    style: {_flow_list(bundle, 'style', value)}")
     # scope is always quoted: it is a phrase with a semicolon in it, and the
     # two examples the runner ships quote it. The quoting is bundlelib's.

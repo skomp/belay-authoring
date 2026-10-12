@@ -327,6 +327,19 @@ def add_optional(
             resolve_main_path(bundle, v, "--required-for") for v in args.required_for
         ]
 
+    # render_optional_entry refuses a blank value after the plan has printed.
+    # That is plain input validation, so it is made here, naming the option.
+    if not entry["offer_because"].strip():
+        raise bl.ToolError(
+            "--offer-because must not be empty or only whitespace; it is the "
+            "sentence the tutor says to the learner."
+        )
+    for item in entry.get("anticipates", []):
+        if not item.strip():
+            raise bl.ToolError(
+                f"--anticipates {item!r} is empty or only whitespace; every "
+                f"item must be a failure-mode id."
+            )
     # Every free-text value reaches emit_scalar when the entry is written. A
     # refusal there would follow the plan below, so make it first, naming the
     # option. (--title was checked in add().)
