@@ -257,6 +257,13 @@ def add(args: argparse.Namespace) -> int:
     _resolve_from(root, args.from_)
     to = _validate_to(args.to)
 
+    # Refuse a value emit_scalar cannot write BEFORE the plan is printed or
+    # anything is staged: the refusal must be the first line the operator
+    # reads, not the last line under a plan that looks like success.
+    bl.refuse_unwritable("--from", args.from_)
+    bl.refuse_unwritable("--to", to)
+    bl.refuse_unwritable("--describe", describe)
+
     entry = {"from": args.from_, "to": to, "describe": describe}
 
     if lesson is not None:

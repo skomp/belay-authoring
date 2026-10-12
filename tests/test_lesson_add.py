@@ -1961,6 +1961,49 @@ def case_offer_because_unwritable() -> None:
         )
 
 
+def case_refusal_comes_before_the_plan() -> None:
+    """belay-authoring#34: every free-text option of `add --optional` that
+    reaches emit_scalar is refused before the plan is printed."""
+    import harness as h
+
+    base = ("--id", "borrow-detour", "--optional")
+    good = {
+        "--title": "A borrow detour",
+        "--offer-because": BECAUSE,
+    }
+    for bad in ("a\x07b", 'say "hi # there'):
+        probes = {
+            "--title": ("--title", bad, "--offer-at", OFFER_AT, "--offer-because", BECAUSE),
+            "--offer-because": ("--title", good["--title"], "--offer-at", OFFER_AT,
+                                "--offer-because", bad),
+            "--anticipates": ("--title", good["--title"], "--offer-at", OFFER_AT,
+                              "--offer-because", BECAUSE, "--anticipates", bad),
+        }
+        for option, args in probes.items():
+            with Workspace() as ws:
+                bundle = ws.copy("rust-automaton-db", "b")
+                git_init(bundle)
+                before = tree_digest(bundle)
+                h.check_refused_first(
+                    f"{option} {bad!r}", add(bundle, *base, *args), option, bundle, before
+                )
+    # The main-path add checks --title early too; pin the first line.
+    with Workspace() as ws:
+        bundle = ws.copy("rust-automaton-db", "b")
+        git_init(bundle)
+        before = tree_digest(bundle)
+        h.check_refused_first(
+            "main-path --title", add(bundle, "--id", "t-probe", "--title", "a\x07b"),
+            "--title", bundle, before,
+        )
+    # POSITIVE CONTROL: writable values print the plan first and write.
+    with Workspace() as ws:
+        bundle = ws.copy("rust-automaton-db", "b")
+        result = optional_add(bundle, "--offer-at", OFFER_AT, "--offer-because", BECAUSE)
+        check(result.returncode == 0, f"refusal-first control: exit 0 ({result.output[-200:]})")
+        check_in("add: lessons/borrow-detour.md", result.stdout, "refusal-first control: the plan is printed")
+
+
 def case_offer_because_round_trips() -> None:
     """--offer-because is free text and goes through emit_scalar. Measured for
     belay-authoring#26: it already round-trips by value, so this pins that and
@@ -2064,6 +2107,8 @@ def main() -> int:
     with case("F28 a title no parser can hold is refused, nothing written"):
         case_title_refused()
 
+    with case("F29a a refused free-text option is the first line of output"):
+        case_refusal_comes_before_the_plan()
     with case("F29b an --offer-because that cannot be written is refused cleanly"):
         case_offer_because_unwritable()
     with case("F29 --offer-because round-trips free text by value"):

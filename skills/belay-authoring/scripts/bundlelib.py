@@ -71,6 +71,7 @@ __all__ = [
     "LOOKALIKE_RE",
     "set_frontmatter_field",
     "emit_scalar",
+    "refuse_unwritable",
     "render_supplies_item",
     "add_supplies",
     "OPTIONAL_KEY",
@@ -1311,6 +1312,23 @@ def emit_scalar(value: str) -> str:
         f"the value {value!r} cannot be written in a form this toolkit can "
         f"read back.{cause} Nothing was written."
     )
+
+
+def refuse_unwritable(label: str, value: str) -> None:
+    """Raise ToolError, led by `label`, when emit_scalar would refuse `value`.
+
+    A command that prints a plan and then stages the change must call this on
+    every free-text value BEFORE it prints, so a refusal is the first thing the
+    operator reads and not the last line under text that looks like success.
+    `label` names where the value came from (`--describe`, or a frontmatter
+    field), so the operator knows which input to change. This is the same
+    emit_scalar call the writer makes later, not a second rule: a value that
+    passes here is a value the writer can write.
+    """
+    try:
+        emit_scalar(value)
+    except ToolError as exc:
+        raise ToolError(f"{label}: {exc}") from None
 
 
 _SUPPLIES_ITEM_KEYS = ("from", "to", "describe")

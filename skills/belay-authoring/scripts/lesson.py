@@ -325,6 +325,20 @@ def add_optional(
             resolve_main_path(bundle, v, "--required-for") for v in args.required_for
         ]
 
+    # Every free-text value reaches emit_scalar when the entry is written. A
+    # refusal there would follow the plan below, so make it first, naming the
+    # option. (--title was checked in add().)
+    bl.refuse_unwritable("--offer-because", entry["offer_because"])
+    for flag, key in (
+        ("--offer-at", "offer_at"),
+        ("--anticipates", "anticipates"),
+        ("--required-for", "required_for"),
+    ):
+        for item in entry.get(key, []):
+            bl.refuse_unwritable(flag, item)
+    if "repair_in" in entry:
+        bl.refuse_unwritable("--repair-in", entry["repair_in"])
+
     print(f"add: {rel}   OPTIONAL - offered, not sequenced")
     print(f"     id      {slug}")
     print(f"     title   {args.title}")

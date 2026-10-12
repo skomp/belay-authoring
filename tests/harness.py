@@ -102,6 +102,25 @@ def check_not_in(needle: str, haystack: str, description: str) -> bool:
     return check(False, description)
 
 
+def check_refused_first(label: str, result, option: str, bundle: Path, before: str) -> None:
+    """A refusal must be the FIRST thing the operator reads.
+
+    Asserts, for a command that was expected to refuse before staging anything:
+    exit code 2, nothing on stdout (a printed plan lands there), the first line
+    of stdout and stderr taken together is the error, that line names `option`,
+    and the bundle is byte-identical to the digest taken before the run. A
+    command that prints its plan first and refuses afterwards fails the second
+    and third assertions, which is the defect belay-authoring#34 records.
+    """
+    check(result.returncode == 2, f"{label}: exit code 2 (got {result.returncode})")
+    check(result.stdout == "", f"{label}: nothing was printed to stdout before the refusal")
+    lines = result.output.splitlines()
+    first = lines[0] if lines else ""
+    check(first.startswith("error: "), f"{label}: the first line of output is the error (got {first!r})")
+    check(option in first, f"{label}: the first line names {option!r} (got {first!r})")
+    check(tree_digest(bundle) == before, f"{label}: the bundle is byte-identical afterwards")
+
+
 def note(text: str) -> None:
     _notes.append(text)
 

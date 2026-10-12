@@ -347,7 +347,12 @@ def derive_offer(frontmatter: dict, bundle: bl.Bundle, source_rel: str) -> dict:
     # spaces and a trailing one; the entry is a single-line scalar, so the
     # whitespace is normalised and the result is PRINTED for confirmation
     # rather than written unseen.
-    return {"offer_at": [after], "offer_because": " ".join(reason.split())}
+    offer_because = " ".join(reason.split())
+    # The plan prints both values before anything is staged. A value emit_scalar
+    # refuses must stop the run here, as the first thing printed.
+    bl.refuse_unwritable(f"{source_rel} 'reason:'", offer_because)
+    bl.refuse_unwritable(f"{source_rel} 'after:'", after)
+    return {"offer_at": [after], "offer_because": offer_because}
 
 
 def promote_optional(

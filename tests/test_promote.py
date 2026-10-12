@@ -1163,6 +1163,46 @@ def main() -> int:
             )
             learner.still_there("C3")
 
+    with case("C4b a 'reason:' emit_scalar refuses is the first line of output"):
+        # belay-authoring#34: the plan prints offer_because, so a refusal after
+        # it would follow text that looks like success.
+        with Workspace() as ws:
+            bundle, instance = pair(ws)
+            # A bundle outside git prints a note before anything else; the
+            # property under test is about the plan, so give it a repository.
+            git_init(bundle)
+            source = (instance / GEN / LIFE).read_text(encoding="utf-8")
+            # yamlite cannot read back the `"` before ` #` refusal even as input,
+            # so a control character is the one refusal a lesson can carry.
+            for name, reason in (("bell", "The learner hit a \x07 here."),):
+                gen = instance / GEN / f"bad-{name}.md"
+                head, _, tail = source.partition("reason: >\n")
+                rest = []
+                dropping = True
+                for line in tail.splitlines(keepends=True):
+                    if dropping and line.startswith("  "):
+                        continue  # the folded block's own lines
+                    dropping = False
+                    rest.append(line)
+                gen.write_text(
+                    (head + 'reason: "' + reason + '"\n' + "".join(rest)).replace(
+                        "id: lifetimes-and-borrows", f"id: bad-{name}"
+                    ),
+                    encoding="utf-8",
+                )
+                check(
+                    frontmatter_of(gen)[1].get("reason") == reason,
+                    f"fixture: the copy's reason: reads back as {reason!r}",
+                )
+                before = tree_digest(bundle)
+                done = promote(instance, f"bad-{name}", bundle, "--optional", "--confirm")
+                check(done.returncode == 2, f"{name}: exit code 2 (got {done.returncode})")
+                check(done.stdout == "", f"{name}: nothing was printed to stdout before the refusal")
+                first = done.output.splitlines()[0] if done.output else ""
+                check(first.startswith("error: "), f"{name}: the first line is the error (got {first!r})")
+                check("'reason:'" in first, f"{name}: the first line names the field (got {first!r})")
+                check(tree_digest(bundle) == before, f"{name}: the bundle is byte-identical afterwards")
+
     with case("C4  an 'after:' or 'reason:' the offer cannot be derived from is refused"):
         with Workspace() as ws:
             bundle, instance = pair(ws)

@@ -457,6 +457,51 @@ def cli_case_describe_unwritable() -> None:
         check(h.tree_digest(bundle) == before, "and the bundle is byte-identical")
 
 
+def cli_case_refusal_comes_before_the_plan() -> None:
+    """belay-authoring#34: a value emit_scalar refuses stops the run before the
+    plan is printed. Every free-text option of `add` is probed, with both kinds
+    of refusal (a control character, and `"` before ` #`)."""
+    with Workspace() as ws:
+        bundle = ws.copy("rust-automaton-db")
+        (bundle / "supplies").mkdir()
+        (bundle / "supplies" / "a.txt").write_text("a\n", encoding="utf-8")
+        bell = "supplies/b\x07.txt"
+        (bundle / bell).write_text("b\n", encoding="utf-8")
+        quoted = 'supplies/say "hi # there.txt'
+        (bundle / quoted).write_text("c\n", encoding="utf-8")
+        h.git_init(bundle)
+        for bad in ("a\x07b", 'say "hi # there'):
+            probes = (
+                ("--describe", ("--from", "supplies/a.txt", "--to", "safe/a.txt", "--describe", bad)),
+                ("--to", ("--from", "supplies/a.txt", "--to", "safe/" + bad, "--describe", "fine")),
+            )
+            for option, args in probes:
+                before = h.tree_digest(bundle)
+                h.check_refused_first(
+                    f"{option} {bad!r}", add_cmd(bundle, *args), option, bundle, before
+                )
+        for source in (bell, quoted):
+            before = h.tree_digest(bundle)
+            h.check_refused_first(
+                f"--from {source!r}",
+                add_cmd(bundle, "--from", source, "--to", "safe/x.txt", "--describe", "fine"),
+                "--from", bundle, before,
+            )
+        # --lesson scope reaches the same emit_scalar calls.
+        before = h.tree_digest(bundle)
+        lesson_id = bl.load_bundle(bundle).lessons[0].slug
+        h.check_refused_first(
+            "--describe with --lesson",
+            add_cmd(bundle, "--from", "supplies/a.txt", "--to", "safe/a.txt",
+                    "--describe", "a\x07b", "--lesson", lesson_id),
+            "--describe", bundle, before,
+        )
+        # POSITIVE CONTROL: a writable value prints the plan, then writes.
+        ok = add_cmd(bundle, "--from", "supplies/a.txt", "--to", "safe/a.txt", "--describe", "fine")
+        check(ok.returncode == 0, f"refusal-first control: a writable value is accepted ({ok.output[-200:]})")
+        check(ok.stdout.startswith("add: supplies entry"), "refusal-first control: the plan is printed first")
+
+
 def cli_case_to_escapes() -> None:
     with Workspace() as ws:
         bundle = ws.copy("rust-automaton-db")
@@ -1307,6 +1352,8 @@ def main() -> int:
         cli_case_lesson_unknown()
     with case("--lesson accepts a lesson listed only in optional_lessons, and still refuses one in neither list"):
         cli_case_lesson_optional()
+    with case("add refuses an unwritable value before it prints the plan"):
+        cli_case_refusal_comes_before_the_plan()
     with case("add refuses a dirty working tree, and --force overrides"):
         cli_case_dirty_tree()
     with case("add --check prints the plan and changes nothing"):
