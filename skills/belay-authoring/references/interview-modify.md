@@ -182,6 +182,11 @@ broken:
    invalid fails loudly, and a failed run leaves the bundle unchanged rather than
    half-edited. If you are looking at a half-edited bundle, that is a defect in the
    toolkit and worth reporting, not working around.
+   One exception: `supplies.py add` accepts an edit to a bundle that was already invalid
+   when the edit removes a finding and adds none, so a list of undeclared material files
+   can be worked down one `add` at a time. Its exit code is then 0 and its report says
+   "still invalid" with the findings that remain. Read that report; do not treat exit 0
+   as "the bundle validates".
 4. **Check every rewrite the tool reports**, particularly `renumber`'s left-alone list.
 
 Common sequences:
