@@ -157,6 +157,157 @@ def case_resolver_derivation() -> None:
         check(squash(pattern) in mine, f"PyYAML's {tag} pattern is carried by bundlelib")
 
 
+LIST_ALPHABET = ['"', "\\", " #", ",", "[", "]", "{", "}", ":", "?", "'", "yes", "null", "0.5",
+                 " ", "a", "b", "-", "+", "=", "#", "- ", "\t", "\x07"]
+
+
+def read_list_both(text: str):
+    """(yamlite list, pyyaml list or exception) for `field: <text>`."""
+    doc = f"field: {text}\n"
+    try:
+        y = bl.load_yaml(doc, "t")["field"]
+    except Exception as exc:  # noqa: BLE001 - the exception is the finding
+        y = exc
+    p = None
+    if pyyaml is not None:
+        try:
+            p = pyyaml.safe_load(doc)["field"]
+        except Exception as exc:  # noqa: BLE001
+            p = exc
+    return y, p
+
+
+def per_item_list(values: list) -> str | None:
+    """The REJECTED design, kept as a control: each item read back alone."""
+    items = []
+    for v in values:
+        try:
+            item = bl._flow_item(v)
+            if bl.load_yaml(f"value: [{item}]\n", "t")["value"] != [v]:
+                return None
+        except (bl.ToolError, bl.YamlError):
+            return None
+        items.append(item)
+    return "[" + ", ".join(items) + "]"
+
+
+def case_flow_list_property() -> None:
+    """emit_flow_list: whole LISTS, read back as written, by both readers."""
+    if pyyaml is None:
+        note("PyYAML is not importable: the PyYAML half of the emit_flow_list property test was SKIPPED")
+    rng = random.Random(34)
+    lists = []
+    for _ in range(6000):
+        lists.append([
+            "".join(rng.choice(TOKENS) if rng.random() < 0.1 else rng.choice(LIST_ALPHABET)
+                    for _ in range(rng.randint(1, 6)))
+            for _ in range(rng.randint(1, 4))
+        ])
+    accepted = refused = 0
+    bad = []
+    control_wrong = 0
+    for values in lists:
+        try:
+            text = bl.emit_flow_list(values, key="field")
+        except bl.ToolError:
+            refused += 1
+            text = None
+        if text is not None:
+            accepted += 1
+            y, p = read_list_both(text)
+            if y != values or (pyyaml is not None and p != values):
+                bad.append((values, text, y, p))
+        # CONTROL: the per-item design accepts lists that yamlite cannot read.
+        alone = per_item_list(values)
+        if alone is not None:
+            y, _ = read_list_both(alone)
+            if y != values:
+                control_wrong += 1
+    note(f"emit_flow_list property test: {len(lists)} lists, {accepted} accepted, {refused} refused; "
+         f"the per-item design would have written {control_wrong} unreadable lists")
+    for values, text, y, p in bad[:10]:
+        print(f"    ---- {values!r} -> {text}: yamlite {y!r}, PyYAML {p!r}")
+    check(not bad, f"every accepted list reads back identically in both readers ({len(bad)} did not)")
+    check(control_wrong > 0, "control: per-item read-back alone accepts lists the line cannot be read back from")
+    check(accepted > len(lists) // 4, f"a meaningful share of lists is accepted ({accepted} of {len(lists)})")
+    check(refused > 0, "some lists are refused")
+    measured = ['yes- ": 0.5+=', "b", " #yes #null"]
+    try:
+        bl.emit_flow_list(measured, key="field")
+        check(False, "the measured list from the review is refused")
+    except bl.ToolError:
+        check(True, "the measured list from the review is refused")
+    for item in ("a, b", "x]", "a[b", "a{b", "a}b"):
+        check(bl.emit_flow_list([item, "z"]) == f'["{item}", z]', f"{item!r} is quoted in a flow list")
+    check(bl.emit_flow_list(["plain words", "b"]) == "[plain words, b]", "plain items stay plain")
+    check(bl.emit_quoted_scalar("3 lessons; a few days") == '"3 lessons; a few days"', "emit_quoted_scalar always quotes")
+    try:
+        bl.emit_quoted_scalar("a\x07b")
+        check(False, "emit_quoted_scalar refuses a control character")
+    except bl.ToolError:
+        check(True, "emit_quoted_scalar refuses a control character")
+
+
+DESC_WORDS = ["alpha", "b", "#", "# note", ":", "a: b", "- x", "&y", "*z", "!t", "|", ">", "'q'", '"d"', "yes",
+              "null", "0.5", "x" * 120, "é", "[a,", "]", "{", "}", "%", "@", "`", "\t", "\n", "\n\n", "  ",
+              "\x07", "\ufffe", "\x85"]
+
+
+def case_folded_block_property() -> None:
+    """emit_folded_block: every accepted block is read back to the folded value
+    by yamlite and PyYAML; refused texts really contain a refused character."""
+    if pyyaml is None:
+        note("PyYAML is not importable: the PyYAML half of the emit_folded_block property test was SKIPPED")
+    rng = random.Random(35)
+    accepted = refused = bad_refusals = 0
+    bad = []
+    for _ in range(3000):
+        text = "".join(
+            rng.choice(DESC_WORDS) + rng.choice(["", " ", "  ", "\n"]) for _ in range(rng.randint(0, 9))
+        )
+        try:
+            lines = bl.emit_folded_block(text, "      ")
+        except bl.ToolError:
+            refused += 1
+            if not any(c in text for c in "\x07\ufffe\x85"):
+                bad_refusals += 1
+            continue
+        accepted += 1
+        words = text.split()
+        want = " ".join(words) + ("\n" if words else "")
+        for doc in (f"description: >\n{''.join(l + chr(10) for l in lines)}",
+                    f"e:\n  - id: x\n    description: >\n{''.join(l + chr(10) for l in lines)}"):
+            try:
+                y = bl.load_yaml(doc, "t")
+            except Exception as exc:  # noqa: BLE001
+                y = exc
+            y = y["e"][0]["description"] if isinstance(y, dict) and "e" in y else (y.get("description") if isinstance(y, dict) else y)
+            p = None
+            if pyyaml is not None:
+                try:
+                    p = pyyaml.safe_load(doc)
+                    p = p["e"][0]["description"] if "e" in p else p["description"]
+                except Exception as exc:  # noqa: BLE001
+                    p = exc
+            if y != want or (pyyaml is not None and p != want):
+                bad.append((text, y, p))
+    note(f"emit_folded_block property test: 3000 texts, {accepted} accepted, {refused} refused")
+    for text, y, p in bad[:5]:
+        print(f"    ---- {text!r}: yamlite {y!r}, PyYAML {p!r}")
+    check(not bad, f"every accepted block reads back identically in both readers ({len(bad)} did not)")
+    check(bad_refusals == 0, f"a text is refused only for a character emit_scalar refuses ({bad_refusals} were not)")
+    check(accepted > 1000 and refused > 0, f"a meaningful share is accepted ({accepted}) and some are refused ({refused})")
+    # POSITIVE CONTROL: the old catalog.py wrote these raw and PyYAML failed.
+    if pyyaml is not None:
+        try:
+            pyyaml.safe_load("d: >\n  a\x07b\n")
+            check(False, "control: PyYAML rejects a raw control character in a block")
+        except Exception:  # noqa: BLE001
+            check(True, "control: PyYAML rejects a raw control character in a block")
+    check(bl.emit_folded_block("", "  ") == [] and bl.emit_folded_block(" \n ", "  ") == [], "an empty or blank description gives no lines")
+    check(len(bl.emit_folded_block("w " * 100, "  ")) > 1, "a long description is wrapped")
+
+
 def main() -> int:
     print("emit_scalar")
     with case("property: every value round-trips by value or is refused"):
@@ -165,6 +316,10 @@ def main() -> int:
         case_named()
     with case("the retyped-scalar patterns match PyYAML's resolver"):
         case_resolver_derivation()
+    with case("emit_flow_list and emit_quoted_scalar (belay-authoring#33)"):
+        case_flow_list_property()
+    with case("emit_folded_block (belay-authoring#33)"):
+        case_folded_block_property()
     return report("test_emit_scalar.py")
 
 

@@ -217,9 +217,11 @@ def add(args: argparse.Namespace) -> int:
     bl.find_validator()
     root = Path(args.bundle)
     bundle = bl.load_bundle(root)
-    bl.require_clean_tree(root, args.force)
     # Refuse a title that cannot be written BEFORE the plan is printed or
     # anything is staged. The same emit_scalar call fills the template later.
+    # require_clean_tree runs after every refusal, just before the plan: its
+    # "not inside a git repository" note is output, and the refusal has to be
+    # the first line the operator reads.
     try:
         bl.emit_scalar(args.title)
     except bl.ToolError as exc:
@@ -325,6 +327,34 @@ def add_optional(
             resolve_main_path(bundle, v, "--required-for") for v in args.required_for
         ]
 
+    # render_optional_entry refuses a blank value after the plan has printed.
+    # That is plain input validation, so it is made here, naming the option.
+    if not entry["offer_because"].strip():
+        raise bl.ToolError(
+            "--offer-because must not be empty or only whitespace; it is the "
+            "sentence the tutor says to the learner."
+        )
+    for item in entry.get("anticipates", []):
+        if not item.strip():
+            raise bl.ToolError(
+                f"--anticipates {item!r} is empty or only whitespace; every "
+                f"item must be a failure-mode id."
+            )
+    # Every free-text value reaches emit_scalar when the entry is written. A
+    # refusal there would follow the plan below, so make it first, naming the
+    # option. (--title was checked in add().)
+    bl.refuse_unwritable("--offer-because", entry["offer_because"])
+    for flag, key in (
+        ("--offer-at", "offer_at"),
+        ("--anticipates", "anticipates"),
+        ("--required-for", "required_for"),
+    ):
+        for item in entry.get(key, []):
+            bl.refuse_unwritable(flag, item)
+    if "repair_in" in entry:
+        bl.refuse_unwritable("--repair-in", entry["repair_in"])
+
+    bl.require_clean_tree(root, args.force)
     print(f"add: {rel}   OPTIONAL - offered, not sequenced")
     print(f"     id      {slug}")
     print(f"     title   {args.title}")
@@ -413,6 +443,7 @@ def add_main_path(
     # is more honest than silently renaming 20 files inside an `add`.
     prefixes_out_of_sequence = position != len(bundle.listed)
 
+    bl.require_clean_tree(root, args.force)
     print(f"add: {rel}")
     print(f"     id      {slug}")
     print(f"     title   {args.title}")

@@ -73,7 +73,7 @@
 #
 # Search location 2 is `~/.agents/skills/belay/scripts/validate_bundle.py`,
 # which is the install route the README documents for Codex. The symlink below
-# points it at the SAME pinned copy `$BELAY_VALIDATOR` names, so all twelve
+# points it at the SAME pinned copy `$BELAY_VALIDATOR` names, so all thirteen
 # suites see one validator and no unpinned one exists on the machine.
 #
 # Verified before this file was written: with the symlink removed and
@@ -104,10 +104,21 @@
 # the validator it used, so the pin is visible in the log rather than assumed.
 #
 # ---------------------------------------------------------------------------
-# THE POSITIVE CONTROL - RUN THIS ONCE, AFTER THE FIRST GREEN BUILD
+# THE POSITIVE CONTROL - DONE 2026-10-12; THE PROCEDURE IS KEPT FOR ANYONE WHO MUST REPEAT IT
 # ---------------------------------------------------------------------------
 # A green matrix does not prove the Linux job can SEE the defect class it was
-# added for. Prove it once, on a throwaway branch, and record the run:
+# added for. Prove it once, on a throwaway branch, and record the run.
+#
+# RESULT. It was run on 2026-10-12, and it showed what step 2 expects. Both
+# `ubuntu-latest` jobs failed on `--folder control: exists() cannot tell a
+# mis-cased body from a correct one`, and both `macos-latest` jobs passed. The
+# branch was deleted unmerged. The run:
+# https://github.com/skomp/belay-authoring/actions/runs/38294027608
+# So the Linux job is shown to see the defect class it was added for. Repeat the
+# procedure only if the matrix, the runner image or the case-sensitivity probe
+# changes.
+#
+# The procedure, as it was run:
 #
 #   1. In tests/test_lesson_add.py, in case A2 ("--folder control"), replace
 #      the portable assertion - the one that builds `empty` / `exact` and
@@ -146,7 +157,7 @@
 # And unreverted, the whole suite - all 12 of 12 - passes with TMPDIR on that
 # case-sensitive volume, so the Linux job is expected green today. What could
 # NOT be done from here is the run on GitHub Actions itself; step 2 above is
-# that missing half.
+# that missing half, and it has since been run (see RESULT above).
 
 name: tests
 

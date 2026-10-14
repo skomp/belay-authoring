@@ -347,7 +347,12 @@ def derive_offer(frontmatter: dict, bundle: bl.Bundle, source_rel: str) -> dict:
     # spaces and a trailing one; the entry is a single-line scalar, so the
     # whitespace is normalised and the result is PRINTED for confirmation
     # rather than written unseen.
-    return {"offer_at": [after], "offer_because": " ".join(reason.split())}
+    offer_because = " ".join(reason.split())
+    # The plan prints both values before anything is staged. A value emit_scalar
+    # refuses must stop the run here, as the first thing printed.
+    bl.refuse_unwritable(f"{source_rel} 'reason:'", offer_because)
+    bl.refuse_unwritable(f"{source_rel} 'after:'", after)
+    return {"offer_at": [after], "offer_because": offer_because}
 
 
 def promote_optional(
@@ -361,6 +366,9 @@ def promote_optional(
     source_text: str,
 ) -> int:
     entry = derive_offer(frontmatter, bundle, source_rel)
+    # After the value checks in derive_offer: the clean-tree note is output,
+    # and a refusal must be the first line the operator reads.
+    bl.require_clean_tree(bundle_root, args.force)
     slug = body_slug_of(frontmatter, source, source_rel)
     rel = f"lessons/{slug}.md"
     refuse_slug_clash(bundle, bundle_root, slug, slug, rel)
@@ -465,7 +473,8 @@ def promote(args: argparse.Namespace) -> int:
     source, source_rel = resolve_generated(instance, args.generated)
     frontmatter, source_text = read_lesson(source)
     bundle = bl.load_bundle(bundle_root)
-    bl.require_clean_tree(bundle_root, args.force)
+    if not args.optional:
+        bl.require_clean_tree(bundle_root, args.force)
 
     if args.optional:
         return promote_optional(

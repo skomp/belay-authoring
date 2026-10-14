@@ -88,59 +88,85 @@ def find_bundles(repo: Path) -> list[Path]:
     return sorted(found)
 
 
-def yaml_scalar(value: str) -> str:
-    """Quote a scalar when plain style would change its meaning."""
-    text = str(value)
-    if text == "":
-        return '""'
-    risky = text[0] in "-?:,[]{}#&*!|>'\"%@`" or text[-1] in " \t"
-    risky = risky or any(token in text for token in (": ", " #", "\n"))
-    risky = risky or text.lower() in ("true", "false", "null", "yes", "no", "on", "off", "~")
-    if risky:
-        return '"' + text.replace("\\", "\\\\").replace('"', '\\"') + '"'
-    return text
+def _require_string(bundle: str, field: str, value: object) -> None:
+    """Refuse a present value that is not a string. str() would write None as
+    `None`, a number as a different scalar and a dict as its Python repr, so
+    the catalogue would not say what the manifest says. (An ABSENT field is not
+    this case: it is read as '' by the callers. The validator's check 8 reports
+    an empty required field, but not a number, and catalog.py does not run it
+    on the bundle first, so this message stands on its own.)"""
+    if not isinstance(value, str):
+        raise bl.ToolError(
+            f"{bundle}: field {field!r}: the manifest value {value!r} is "
+            f"{type(value).__name__}, not a string. Nothing was written."
+        )
 
 
-def yaml_list(values: list) -> str:
-    return "[" + ", ".join(yaml_scalar(str(v)) for v in values) + "]"
+def _scalar(bundle: str, field: str, value: object) -> str:
+    """One catalogue scalar, written by bundlelib.emit_scalar.
+
+    This module has no quoting rule of its own. A value emit_scalar refuses
+    stops the run, naming the bundle and the field, and nothing is written:
+    it is neither skipped nor altered, because a catalogue entry that quietly
+    differs from the manifest it was built from is the drift this tool exists
+    to prevent.
+    """
+    _require_string(bundle, field, value)
+    try:
+        return bl.emit_scalar(value)
+    except bl.ToolError as exc:
+        raise bl.ToolError(f"{bundle}: field {field!r}: {exc}") from None
 
 
-def wrap_description(text: str, indent: str) -> list[str]:
-    """A folded block scalar, so a long description stays readable."""
-    words = " ".join(str(text).split()).split(" ")
-    lines: list[str] = []
-    current = indent
-    for word in words:
-        if current != indent and len(current) + 1 + len(word) > 88:
-            lines.append(current)
-            current = indent + word
-        else:
-            current = current + (" " if current != indent else "") + word
-    if current != indent:
-        lines.append(current)
-    return lines
+def _flow_list(bundle: str, field: str, values: list) -> str:
+    """A flow sequence, `[a, b]`, written and read back as a whole by
+    bundlelib.emit_flow_list.
+
+    emit_scalar alone is not enough here: its plain form is right in block
+    context and wrong inside `[...]`, where `a, b` reads as two items. And
+    items that each read back alone can still make one unreadable line.
+    """
+    if not isinstance(values, list) or not all(isinstance(v, str) for v in values):
+        raise bl.ToolError(
+            f"{bundle}: field {field!r}: the manifest value {values!r} is not a "
+            f"list of strings. Nothing was written."
+        )
+    try:
+        return bl.emit_flow_list(values, key=field)
+    except bl.ToolError as exc:
+        raise bl.ToolError(f"{bundle}: field {field!r}: {exc}") from None
 
 
 def entry_lines(
-    manifest: dict, relative: str, lesson_count: int, optional_lesson_count: int
+    manifest: dict,
+    relative: str,
+    lesson_count: int,
+    optional_lesson_count: int,
+    bundle: str,
 ) -> list[str]:
-    out = [f"  - id: {yaml_scalar(manifest['id'])}"]
-    out.append(f"    title: {yaml_scalar(manifest.get('title', ''))}")
+    """The catalogue lines for one bundle. `bundle` names it in an error."""
+    out = [f"  - id: {_scalar(bundle, 'id', manifest['id'])}"]
+    out.append(f"    title: {_scalar(bundle, 'title', manifest.get('title', ''))}")
     out.append("    description: >")
-    out.extend(wrap_description(manifest.get("description", ""), "      "))
+    description = manifest.get("description", "")
+    _require_string(bundle, "description", description)
+    try:
+        out.extend(bl.emit_folded_block(description, "      "))
+    except bl.ToolError as exc:
+        raise bl.ToolError(f"{bundle}: field 'description': {exc}") from None
     # Field order follows catalogue-format.md section 5, so a generated entry
     # diffs cleanly against a hand-written one.
     for field in ("subjects", "aliases"):
         value = manifest.get(field)
-        if isinstance(value, list) and value:
-            out.append(f"    {field}: {yaml_list(value)}")
-    out.append(f"    level: {yaml_scalar(manifest.get('level', ''))}")
+        if value not in (None, []):  # absent, null or empty: nothing to write
+            out.append(f"    {field}: {_flow_list(bundle, field, value)}")
+    out.append(f"    level: {_scalar(bundle, 'level', manifest.get('level', ''))}")
     value = manifest.get("style")
-    if isinstance(value, list) and value:
-        out.append(f"    style: {yaml_list(value)}")
+    if value not in (None, []):
+        out.append(f"    style: {_flow_list(bundle, 'style', value)}")
     # scope is always quoted: it is a phrase with a semicolon in it, and the
-    # two examples the runner ships quote it.
-    out.append('    scope: "{}"'.format(scope_for(lesson_count).replace('"', '\\"')))
+    # two examples the runner ships quote it. The quoting is bundlelib's.
+    out.append(f"    scope: {bl.emit_quoted_scalar(scope_for(lesson_count))}")
     # optional_lesson_count is ALWAYS written, including 0. Deliberate: if 0
     # were omitted, an absent field would mean either "no optional lessons"
     # or "generated before this field existed", and a reader could not tell
@@ -151,10 +177,12 @@ def entry_lines(
     # for two shapes in two files is a collision this project has already
     # paid for twice.
     out.append(f"    optional_lesson_count: {optional_lesson_count}")
-    out.append(f"    workspace_kind: {yaml_scalar(manifest.get('workspace_kind', ''))}")
+    out.append(
+        f"    workspace_kind: {_scalar(bundle, 'workspace_kind', manifest.get('workspace_kind', ''))}"
+    )
     out.append("    source:")
     out.append("      type: local")
-    out.append(f"      path: {yaml_scalar(relative)}")
+    out.append(f"      path: {_scalar(bundle, 'source.path', relative)}")
     return out
 
 
@@ -220,7 +248,9 @@ def build(repo: Path, catalog_path: Path) -> tuple[str, list[str]]:
         # possibly-diverging read of the manifest.
         bundle = bl.Bundle(directory, manifest, manifest_text, [], lessons, [])
         optional_count = len(bundle.optional)
-        blocks.append(entry_lines(manifest, relative, len(lessons), optional_count))
+        blocks.append(
+            entry_lines(manifest, relative, len(lessons), optional_count, str(directory))
+        )
         notes.append(
             f"{identifier}: {len(lessons)} lessons -> scope "
             f"{scope_for(len(lessons))!r}, {optional_count} optional lesson(s), "
